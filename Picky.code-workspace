@@ -1,0 +1,21 @@
+{ // 2023-11-21
+	"folders": [
+		{
+			"path": "."
+		}
+    ],
+    "settings": {},
+    "launch": {
+        "version": "0.2.0",
+        "configurations": [
+            {
+                "name": "Debug_Harness.ps1🚀",
+                "type": "PowerShell",
+                "request": "launch",
+                "script": "${workspaceRoot}/debug_harness.ps1",
+                "cwd": "${workspaceRoot}"
+            }
+
+        ]
+    }
+}
