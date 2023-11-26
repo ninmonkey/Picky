@@ -80,7 +80,7 @@ function pk.Assert.IsTypeInfo {
         throw [ArgumentException]::new(
             <# message: #> 'Was not a typeInfo',
             <# paramName: #> 'InputObject' )
-    }  =>
+    }
 }
 function pk.Assert.IsArray {
     param(
@@ -157,6 +157,14 @@ function pk.Assert.NotTrueNull {
 
 # this function will create a new object with specific keys from the input object
 function Picky.SelectBy-Keys {
+    <#
+    .SYNOPSIS
+        Select properties of objects, or keys for dictionaries, based on key names, dropping other properties
+    .NOTES
+        - [ ] select by regex
+        - [ ] select by condition: blank/whitespace/truenull/trueemptystr
+
+    #>
     [Alias(
         'Picky.Select.Keys',
         'Picky.SelectBy.Keys',
