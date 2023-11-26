@@ -1,13 +1,17 @@
 BeforeAll {
-    $ModPath = $PSCommandPath -replace '\.tests.ps1$', '.psm1'
+    $ModPath =
+        Join-Path $PSScriptRoot '../Picky/Picky.psm1'
+        # $PSCommandPath -replace '\.tests.ps1$', '.psm1'
     Import-Module -Force -PassThru $ModPath
        | Join-String -Prop { $_.Name, $_.Version -join ': ' }| out-host
     $ErrCountStart = $Error.Count
     $Error.Count
         | Join-String -f 'ErrCountStart: {0}'
         | write-host -back 'darkyellow'
+    $PSStyle.OutputRendering = 'ansi'
 }
 AfterAll {
+    $PSStyle.OutputRendering = 'ansi'
     'ErrCountEnd: {0} [ +{1} ]' -f @(
         $Error.Count
         $Error.Count - $ErrCountStart

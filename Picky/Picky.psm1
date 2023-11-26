@@ -59,6 +59,10 @@ function pk.Assert.IsTypeInfo {
     #     # 'pk.Is.TypeInfo',
     #     # 'pk.Is.Tinfo'
     # )]
+    [OutputType(
+        'System.Bool'
+        # , 'System.Void' # may throw
+    )]
     param(
         [AllowEmptyCollection()]
         [AllowEmptyString()]
@@ -71,14 +75,12 @@ function pk.Assert.IsTypeInfo {
         [switch]$AsBool
     )
     $test = $InputObject -is 'type'
-    if($AsBool) {
-        return $test
-    }
+    if($AsBool) { return $test }
     if(-not $test) {
         throw [ArgumentException]::new(
-        <# paramName: #> 'InputObject',
-        <# message: #> 'Was not a typeInfo')
-    }
+            <# message: #> 'Was not a typeInfo',
+            <# paramName: #> 'InputObject' )
+    }  =>
 }
 function pk.Assert.IsArray {
     param(
@@ -92,7 +94,16 @@ function pk.Assert.IsArray {
         [Alias('TestOnly', 'AsError')]
         [switch]$AsBool
     )
-    $Tinfo = $InputObject.GetType()
+    $tinfo = ( $InputObject )?.GetType()
+    $test = [System.Management.Automation.LanguagePrimitives]::GetEnumerable(
+        $InputObject) -is [object]
+
+    if( $AsBool ) { return $test }
+    if( -not $Test ) {
+        throw [ArgumentException]::new(
+            <# message: #> 'Was not an array. -not LangPrimitive::GetEnumerable',
+            <# paramName: #> 'InputObject')
+    }
 }
 function pk.Assert.NotEmpty.List {
     param(
@@ -143,9 +154,14 @@ function pk.Assert.NotTrueNull {
         <# message: #> 'Was Null')
     }
 }
-function PickKeys {
+
 # this function will create a new object with specific keys from the input object
-function Select-Keys {
+function Picky.SelectBy-Keys {
+    [Alias(
+        'Picky.Select.Keys',
+        'Picky.SelectBy.Keys',
+        'pk.SelectBy.Keys'
+    )]
     param(
         [Parameter(Mandatory)]
         [object]$InputObject,
@@ -159,6 +175,7 @@ function Select-Keys {
         [Alias('Keys', 'Include')]
         [string[]]$RequiredKeys
     )
+    write-warning 'wip: validate /w tests'
 
     # create a new ordered dictionary object
     $selected = [ordered]@{}
@@ -201,14 +218,54 @@ function Select-Keys {
     return $selected
 }
 
+function Picky.Add.IndexProp {
+    <#
+    .SYNOPSIS
+        add an index property to each object in the chain, starting at 0
+    .NOTES
+        not performant, modify psobject directly
+    .example
+        gci ~
+            | Sort-Object LastWriteTime -Descending | .Add.IndexProp
+            | Sort-Object Name | ft Name, Index, LastWriteTime
+    #>
+    [Alias(
+        'Picky.Add.IndexProp',
+        'pk.AddIndex'
+    )]
+    param(
+        [Parameter(Mandatory, ValueFromPipeline)]
+        [object[]]$InputObject
+    )
+    begin {
+        [List[Object]]$items = @()
+        $Index = 0
+    }
+    process {
+        $items.AddRange(@( $InputObject ))
+    }
+    end {
+        $Items | %{
+            $addMemberSplat = @{
+                InputObject = $_
+                NotePropertyName = 'Index'
+                NotePropertyValue = $Index++
+                Force = $true
+                PassThru = $true
+                ErrorAction = 'ignore'
+            }
+            Add-Member @addMemberSplat
+        }
+    }
 }
 
 function TryDropParams {
+    # drop the standard default CmdletBinding parameter names
     [CmdletBinding()]
     param(
         [Parameter(Mandatory)]
         $Text
     )
-
+    throw 'nyi'
 
 }
