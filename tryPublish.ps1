@@ -5,7 +5,7 @@ $newestBuild =
     Get-ChildItem 'H:\data\2023\pwsh\PsModules\Picky\Picky\..\..\..\PsModules.Import\Picky' | Sort-Object LastWriteTime -Descending -Top 1
 
 $newestBuild
-    | Join-String -op 'newestBuild =: {0}' | Write-Host -back 'darkgreen'
+    | Join-String -op 'newestBuild =: ' | Write-Host -back 'darkgreen'
 
 # Publish-Module -Name "Picky" -NuGetApiKey $App.NugetApiKey -WhatIf
 $publishPSResourceSplat = @{
