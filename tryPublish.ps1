@@ -10,11 +10,12 @@ $newestBuild
 # Publish-Module -Name "Picky" -NuGetApiKey $App.NugetApiKey -WhatIf
 $publishPSResourceSplat = @{
     ApiKey          = $App.NuGetApiKey
-    WhatIf          = $true
+    # WhatIf          = $true
     Repository      = 'PSGallery'
     Confirm         = $true
     Path            = $newestBuild
     DestinationPath = 'g:\temp\lastPwshNuget'
+    Verbose = $true
 
 }
 
