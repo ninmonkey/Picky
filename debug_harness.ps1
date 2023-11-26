@@ -8,10 +8,10 @@ Import-Module pansies -DisableNameChecking -PassThru
 [ValidateSet('FromLocal', 'FromModuleBuilder', 'FromInstall', 'Implicit', 'Picky')]
 $importMode =
     #                       # I am: H:\data\2023\pwsh\PsModules\Picky\debug_harness.ps1
-    # 'FromLocal'             # was H:\data\2023\pwsh\PsModules\Picky\Picky\Picky.psm1
+    'FromLocal'             # was H:\data\2023\pwsh\PsModules\Picky\Picky\Picky.psm1
     # 'Implicit'              # was H:\data\2023\pwsh\PsModules\Picky\Picky\Picky.psm1
     # 'FromModuleBuilder'       # was H:\data\2023\pwsh\PsModules.Import\Picky\0.0.6\Picky.psm1
-    'FromInstall'           # was C:\Users\cppmo_000\SkyDrive\Documents\PowerShell\Modules\Picky\0.0.5\Picky.psm1
+    # 'FromInstall'           # was C:\Users\cppmo_000\SkyDrive\Documents\PowerShell\Modules\Picky\0.0.5\Picky.psm1
 
 Join-String -in $ImportMode -op 'ImportMode: ' | New-Text -bg 'darkblue' -fg 'white' | write-verbose -verbose
 
@@ -60,7 +60,14 @@ function RebuildModule.Picky {
     popd -StackName 'builder'
 }
 
-rebuildModule.Picky && ('BuildWorked' | write-host -back 'darkblue')
+switch($ImportMode){
+    'FromLocal' {
+        # 'pass'
+    }
+    default {
+        rebuildModule.Picky && ('BuildWorked' | write-host -back 'darkblue')
+    }
+}
 
 # if($false) {
 #     # Import-Module -Force -PassThru $newestModulePath -DisableNameChecking
