@@ -6,3 +6,5 @@ filter presets to drop keys
 - [ ] drop blank keys/props
 - [ ] drop whitespace keys/props
 '@
+
+- `System.Management.Automation.ParameterMetadata` from `(gcm 'DoWork').ResolveParameter('Text')`

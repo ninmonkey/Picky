@@ -62,7 +62,7 @@ if($ModuleConfig.TemplateFromCacheMe) {
             WriteBg $ColorBg ) -join ''
     }
 }
-function ScriptBlock.GetInfo {
+function Picky.ScriptBlock.GetInfo {
     <#
     .SYNOPSIS
         Quickly and easily grab properties and metadata for [ScriptBlock] types
@@ -71,6 +71,13 @@ function ScriptBlock.GetInfo {
         Pwsh> gcm 'DoWork'
             | Function.GetInfo ScriptBlock
             | ScriptBlock.GetInfo File
+    .EXAMPLE
+        gcm Prompt | Function.GetInfo ScriptBlock | SCriptBlock.getInfo PathWithLine
+            H:\data\2023\dotfiles.2023\pwsh\src\Invoke-MinimalInit.ps1:161:1
+
+        gcm ScriptBlock.GetInfo | Function.GetInfo ScriptBlock | SCriptBlock.getInfo PathWithLine
+            H:\data\2023\pwsh\PsModules\Picky\Picky\Picky.psm1:65:1
+
     .LINK
         Picky\Function.GetInfo
     .LINK
@@ -82,6 +89,10 @@ function ScriptBlock.GetInfo {
         - [ ] DefaultParameterSet
         - [ ] (Jsonify) => Id, Ast, Module, Etc...
     #>
+    [Alias(
+        'ScriptBlock.GetInfo',
+        'pk.ScriptBlock'
+    )]
     [OutputType(
         'PSModuleInfo'
 
@@ -100,14 +111,19 @@ function ScriptBlock.GetInfo {
             'Attributes',
             'File',
             'Module',
+            'Content',
             'StartPosition',
             'Id',
+            'PathWithLine',
             'Ast'
         )]
         [string]$OutputKind
     )
     # future: assert properties exist
     process {
+        if($Null -eq $InputObject) { return }
+        [ScriptBlock]$ObjAsSB = $InputObject
+
         if( $InputObject -isnot [ScriptBlock] ) {
             'Expected A <ScriptBlock | ... >. Actual: {0}' -f @(
                 $InputObject.GetType().Name
@@ -120,27 +136,47 @@ function ScriptBlock.GetInfo {
         ) | write-verbose
 
         # if( -not $InputObject -isnot 'F')
-        if($Null -eq $InputObject) { return }
         switch( $OutputKind ) {
             'Attributes' {
                 # -is [List[Attribute]]
-                $result  = $Input.Attributes
+                $result  = $InputObject.Attributes
                 break
             }
             'File' {
                 # -is [string]
-                $result  = $Input.File
+                $result  = $InputObject.File
                 break
             }
             'Module' {
                 # is [PSModuleInfo]
-                $result  = $input.Module
+                $result  = $inputObject.Module
                 break
             }
             'StartPosition' {
                 # -is [PSToken]
                 $result  = $InputObject.StartPosition
                 break
+            }
+            'PathWithLine' {
+                # -is [string]
+                [PSToken]$Pos     = $InputObject.StartPosition
+                [int]$StartLine   = $Pos.StartLine
+                [int]$StartCol    = $Pos.StartColumn
+                [int]$EndLine     = $Pos.EndLine # prop: NotYetUsed
+                [int]$EndCol      = $Pos.EndColumn # prop: NotYetUsed
+                [int]$Start       = $Pos.Start # prop: NotYetUsed
+                [int]$Length      = $Pos.Length # prop: NotYetUsed
+                [string]$FullName = $InputObject.File
+
+                $result = '{0}:{1}:{2}' -f @(
+                    $FullName
+                    $StartLine
+                    $StartCOl
+                )
+                break
+            }
+            'Content' {
+                $result = $InputObject.StartPosition.Content
             }
             'Id' {
                 # -is [Guid]
@@ -165,7 +201,7 @@ function ScriptBlock.GetInfo {
 
     }
 }
-function Function.GetInfo {
+function Picky.Function.GetInfo {
     <#
     .SYNOPSIS
         Quickly and easily grab properties and metadata for [CommandInfo], [FunctionInfo] etc
@@ -192,6 +228,10 @@ function Function.GetInfo {
 
         - [ ] (Jsonify) => Options, Description, Noun, Verb, Name, ModuleName, Source, Version
     #>
+    [Alias(
+        'Function.GetInfo',
+        'pk.Function'
+    )]
     [OutputType(
         'ScriptBlock',
         'PSModuleInfo',
@@ -289,7 +329,7 @@ function Function.GetInfo {
 
     }
 }
-function String.GetCrumbs {
+function Picky.String.GetCrumbs {
     <#
     .SYNOPSIS
         Split a string into chunks.'
@@ -306,7 +346,8 @@ function String.GetCrumbs {
         $w1.CrumbCount | Should -be 2
     #>
     [Alias(
-        # 'String.GetCrumbs',
+        'Picky.String.Crumbs',
+        'String.GetCrumbs',
         'Pk.StrCrumbs',
         'Pick-WordCrumbs'
         # 'GetStringCrumbs'
@@ -434,10 +475,6 @@ $w1.Crumbs | Should -BeExactly @('f', ' bar')
         'Str.*'
         '*-Str*'
     }
-    if( $ModuleConfig.ExportPrefix.Picky ) {
-        'Picky.*'
-        '*-Picky*'
-    }
     if( $ModuleConfig.ExportPrefix.Function ) {
         'Function.*'
         '*-Function*'
@@ -445,6 +482,10 @@ $w1.Crumbs | Should -BeExactly @('f', ' bar')
     if( $ModuleConfig.ExportPrefix.ScriptBlock ) {
         'ScriptBlock.*'
         '*-ScriptBlock*'
+    }
+    if( $ModuleConfig.ExportPrefix.Picky ) {
+        'Picky.*'
+        '*-Picky*'
     }
     if( $ModuleConfig.ExportPrefix.Pick ) {
         'Pick.*'
