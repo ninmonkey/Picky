@@ -151,123 +151,332 @@ function pk.Assert.NotEmpty.List {
     }
 
 }
-function pk.Assert.NotTrueNull {
+[hashtable]$script:Cache = @{}
+# if($Script:ModuleConfig.VerboseJson_ArgCompletions) {
+#     (Join-Path (gi 'temp:\') 'CacheMeIfYouCan.ArgCompletions.log')
+#     | Join-String -op 'CacheMeIfYouCan: VerboseLogging for ArgCompletions is enabled at: '
+#     | write-warning
+# }
+$script:Color = @{
+    MedBlue   = '#a4dcff'
+    DimBlue   = '#7aa1b9'
+    DimFg     = '#cbc199'
+    DarkFg    = '#555759'
+    DimGreen  = '#95d1b0'
+    DimOrange = '#ce8d70'
+    DimPurple = '#c586c0'
+    Dim2Purple = '#c1a6c1'
+    DimYellow = '#dcdcaa'
+    MedGreen  = '#4cd189'
+}
+if($ModuleConfig.TemplateFromCacheMe) {
+    function WriteFg {
+        # Internal Ansi color wrapper
+        param( [object]$Color )
+        if( [string]::IsNullOrEmpty( $Color ) ) { return }
+        $PSStyle.Foreground.FromRgb( $Color )
+    }
+    function WriteBg {
+        # Internal Ansi color wrapper
+        param( [object]$Color )
+        if( [string]::IsNullOrEmpty( $Color ) ) { return }
+        $PSStyle.Background.FromRgb( $Color )
+    }
+    function WriteColor {
+        # Internal Ansi color wrapper
+        param(
+            [object]$ColorFg,
+            [object]$ColorBg
+        )
+        if( [string]::IsNullOrEmpty( $ColorFg ) -and [string]::IsNullOrEmpty( $ColorBg ) ) { return }
+        @(  WriteFg $ColorFg
+            WriteBg $ColorBg ) -join ''
+    }
+}
+function Picky.ScriptBlock.GetInfo {
     <#
+    .SYNOPSIS
+        Quickly and easily grab properties and metadata for [ScriptBlock] types
     .EXAMPLE
-    #>
-    [Alias('pk.Test.NotTrueNull')]
-    param(
-        # anything
-        [AllowEmptyCollection()]
-        [AllowEmptyString()]
-        [AllowNull()]
-        [Parameter(Mandatory)]
-        [object]$InputObject,
+        # use auto completion
+        Pwsh> gcm 'DoWork'
+            | Function.GetInfo ScriptBlock
+            | ScriptBlock.GetInfo File
+    .EXAMPLE
+        gcm Prompt | Function.GetInfo ScriptBlock | SCriptBlock.getInfo PathWithLine
+            H:\data\2023\dotfiles.2023\pwsh\src\Invoke-MinimalInit.ps1:161:1
 
-        # return a bool instead of throwing
-        [Alias('TestOnly', 'AsError')]
-        [switch]$AsBool
-    )
-    if( $MyInvocation.InvocationName -in @('pk.Test.NotTrueNull')) {
-        $Asbool = $true
-    }
-    $isNull = $Null -eq $InputObject
-    if( $AsBool ) {
-        return $IsNull
-    }
+        gcm ScriptBlock.GetInfo | Function.GetInfo ScriptBlock | SCriptBlock.getInfo PathWithLine
+            H:\data\2023\pwsh\PsModules\Picky\Picky\Picky.psm1:65:1
 
-    if( $IsNull ) {
+    .LINK
+        Picky\Function.GetInfo
+    .LINK
+        Picky\ScriptBlock.GetInfo
+    .notes
+        future info
+        - [ ] other scriptblock/function types
 
-        throw [System.ArgumentNullException]::new(
-        <# paramName: #> 'InputObject',
-        <# message: #> 'Was Null')
-    }
-}
-
-# this function will create a new object with specific keys from the input object
-function Picky.SelectBy-Keys {
-    <#
-    .SYNOPSIS
-        Select properties of objects, or keys for dictionaries, based on key names, dropping other properties
-    .NOTES
-        - [ ] select by regex
-        - [ ] select by condition: blank/whitespace/truenull/trueemptystr
-
+        - [ ] DefaultParameterSet
+        - [ ] (Jsonify) => Id, Ast, Module, Etc...
     #>
     [Alias(
-        'Picky.Select.Keys',
-        'Picky.SelectBy.Keys',
-        'pk.SelectBy.Keys'
+        'ScriptBlock.GetInfo',
+        'pk.ScriptBlock'
     )]
+    [OutputType(
+        'PSModuleInfo'
+
+    )]
+    [CmdletBinding(DefaultParameterSetName='FromPipe')]
     param(
-        [Parameter(Mandatory)]
+        [Parameter( Mandatory, ParameterSetName='FromPipe',  ValueFromPipeline, ValueFromPipelineByPropertyName)]
+        [Parameter( Mandatory, ParameterSetName='FromParam', Position = 0 )]
+        [Alias('Name', 'Func', 'Fn', 'Command', 'InObj', 'Obj', 'ScriptBlock', 'SB', 'E', 'Expression')]
         [object]$InputObject,
 
+        [Parameter( ParameterSetName='FromPipe',  Position = 0 )]
+        [Parameter( ParameterSetName='FromParam', Position = 1 )]
         [Parameter(Mandatory)]
-        [Alias('Keys', 'Include')]
-        [string[]]$KeyName,
-
-        # mandatory else errors
-        [Parameter()]
-        [Alias('Keys', 'Include')]
-        [string[]]$RequiredKeys
+        [ValidateSet(
+            'Attributes',
+            'File',
+            'Module',
+            'Content',
+            'StartPosition',
+            'Id',
+            'PathWithLine',
+            'Ast'
+        )]
+        [string]$OutputKind
     )
-    write-warning 'wip: validate /w tests'
+    # future: assert properties exist
+    process {
+        if($Null -eq $InputObject) { return }
+        [ScriptBlock]$ObjAsSB = $InputObject
 
-    # create a new ordered dictionary object
-    $selected = [ordered]@{}
-
-    # iterate over each key name
-    foreach($key in $KeyName) {
-
-        # if the key name exists in the input object
-        if($InputObject.psobject.properties.name -contains $key) {
-
-            # add the key and associated value to the new object
-            $selected.Add($key, $InputObject.$key)
+        if( $InputObject -isnot [ScriptBlock] ) {
+            'Expected A <ScriptBlock | ... >. Actual: {0}' -f @(
+                $InputObject.GetType().Name
+            )
+            | Dotils.Write-DimText | Infa
+                # | write-warning
         }
-    }
+        'InputType: {0}, Expected <ScriptBlock>' -f @(
+            $InputObject.GetType().Name
+        ) | write-verbose
 
-    # if there are required keys
-    if($RequiredKeys) {
-
-        # iterate over each required key
-        foreach($key in $RequiredKeys) {
-
-            # if the key name exists in the input object
-            if($InputObject.psobject.properties.name -contains $key) {
-
-                # add the key and associated value to the new object
-                $selected.Add($key, $InputObject.$key)
+        # if( -not $InputObject -isnot 'F')
+        switch( $OutputKind ) {
+            'Attributes' {
+                # -is [List[Attribute]]
+                $result  = $InputObject.Attributes
+                break
             }
-
-            # if the key name does not exist in the input object
-            else {
-
-                # throw an error message
-                $msg = "Required key '$key' not found in input object."
-                throw $msg
+            'File' {
+                # -is [string]
+                $result  = $InputObject.File
+                break
             }
+            'Module' {
+                # is [PSModuleInfo]
+                $result  = $inputObject.Module
+                break
+            }
+            'StartPosition' {
+                # -is [PSToken]
+                $result  = $InputObject.StartPosition
+                break
+            }
+            'PathWithLine' {
+                # -is [string]
+                [PSToken]$Pos     = $InputObject.StartPosition
+                [int]$StartLine   = $Pos.StartLine
+                [int]$StartCol    = $Pos.StartColumn
+                [int]$EndLine     = $Pos.EndLine # prop: NotYetUsed
+                [int]$EndCol      = $Pos.EndColumn # prop: NotYetUsed
+                [int]$Start       = $Pos.Start # prop: NotYetUsed
+                [int]$Length      = $Pos.Length # prop: NotYetUsed
+                [string]$FullName = $InputObject.File
+
+                $result = '{0}:{1}:{2}' -f @(
+                    $FullName
+                    $StartLine
+                    $StartCOl
+                )
+                break
+            }
+            'Content' {
+                $result = $InputObject.StartPosition.Content
+            }
+            'Id' {
+                # -is [Guid]
+                $result  = $InputObject.Id
+                break
+            }
+            'Ast' {
+                # -is [Ast>]
+                $result  = $InputObject.Ast
+                break
+            }
+            default { throw "Unhandled OutputKind: $OutputKind" }
         }
-    }
 
-    # return the new object
-    return $selected
+
+        $isBlank = [string]::IsNullOrWhiteSpace( $result )
+        if($isBlank -and $InputObject) {
+            'Object exists but the attribute is blank'
+                | Dotils.Write-DimText | Infa
+        }
+        return $result
+
+    }
 }
-
-function Picky.Add.IndexProp {
+function Picky.Function.GetInfo {
     <#
     .SYNOPSIS
-        add an index property to each object in the chain, starting at 0
-    .NOTES
-        not performant, modify psobject directly
-    .example
-        gci ~
-            | Sort-Object LastWriteTime -Descending | .Add.IndexProp
-            | Sort-Object Name | ft Name, Index, LastWriteTime
+        Quickly and easily grab properties and metadata for [CommandInfo], [FunctionInfo] etc
+    .EXAMPLE
+        # use auto completion
+        Pwsh> gcm 'DoWork'
+            | Function.GetInfo Parameters
+    .LINK
+        Picky\Function.GetInfo
+    .LINK
+        Picky\ScriptBlock.GetInfo
+    .LINK
+        Gcm ConvertTo-Json
+            | Function.GetInfo ResolveParameter -ResolveParameter 'e'
+
+            # Error ambigous. Possible matches include: -EnumsAsStrings -EscapeHandling -ErrorAction -ErrorVariable."
+
+    .notes
+        future info
+        - [ ] ParameterMetadata ResolveParameter(string name);
+        - [ ] DefaultParameterSet
+        - [ ] ScriptBlock
+        - [ ] CommandType
+
+        - [ ] (Jsonify) => Options, Description, Noun, Verb, Name, ModuleName, Source, Version
     #>
     [Alias(
-        'pk.Str.Crumbs',
+        'Function.GetInfo',
+        'pk.Function'
+    )]
+    [OutputType(
+        'ScriptBlock',
+        'PSModuleInfo',
+        '[IDictionary[string, [Management.Automation.ParameterMetadata]]]',
+        '[Collections.ObjectModel.ReadOnlyCollection[Management.Automation.CommandParameterSetInfo]]',
+        'Management.Automation.ParameterMetadata'
+    )]
+    [CmdletBinding(DefaultParameterSetName='FromPipe')]
+    param(
+        [Parameter( Mandatory, ParameterSetName='FromPipe',  ValueFromPipeline, ValueFromPipelineByPropertyName)]
+        [Parameter( Mandatory, ParameterSetName='FromParam', Position = 0 )]
+        [Alias('Name', 'Func', 'Fn', 'Command', 'InObj', 'Obj', 'ScriptBlock', 'SB')]
+        [object]$InputObject,
+
+        [Parameter( ParameterSetName='FromPipe',  Position = 0 )]
+        [Parameter( ParameterSetName='FromParam', Position = 1 )]
+        [Parameter(Mandatory)]
+        [ValidateSet(
+            'Attributes',
+            'ScriptBlock',
+            'Module',
+            'Parameters',
+            'ResolveParameter',
+            'ParameterSets'
+        )]
+        [string]$OutputKind,
+
+        # Appears to resolve what parameters will resolve using a partial match
+        # essentially: Name -like 'query*'
+        # case-insensitive. Blank strings throw errors
+        # also throws when value is ambigious
+        [Parameter()]
+        [String]$ResolveParameter
+    )
+    process {
+        if($PSBoundParameters.ContainsKey('ResolveParameter')) {
+            if($OutputKind -ne 'ResolveParameter') { throw "Invalid OutputKind, must be ResolveParameter using ResolveParameter"}
+        }
+
+        # future: assert properties exist
+        if( $InputObject -isnot [CommandInfo] -and $InputObject -isnot [FunctionInfo]) {
+            'Expected A <CommandInfo | FunctionInfo>. Actual: {0}' -f @(
+                $InputObject.GetType().Name
+            )
+            | Dotils.Write-DimText | Infa
+                # | write-warning
+        }
+        'InputType: {0}, Expected <CommandInfo|FunctionInfo>' -f @(
+            $InputObject.GetType().Name
+        ) | write-verbose
+
+        # if( -not $InputObject -isnot 'F')
+        if($Null -eq $InputObject) { return }
+        switch( $OutputKind ) {
+
+            'Attributes' {
+                $result  = $Input.ScriptBlock.Attributes
+                break
+            }
+            'ScriptBlock' {
+                # -is [ScriptBlock]
+                $result  = $Input.ScriptBlock
+                break
+            }
+            'Module' {
+                # is [PSModuleInfo]
+                $result  = $input.Module
+                break
+            }
+            'Parameters' {
+                # -is [Dictionary<string, ParameterMetadata>]]
+                $result  = $InputObject.Parameters
+                break
+            }
+            'ParameterSets' {
+                # -is [ReadOnlyCollection<CommandParameterSetInfo>]
+                $result  = $InputObject.ParameterSets
+                break
+            }
+            'ResolveParameter' {
+                # -is [ParameterMetadata]
+                $result  = $InputObject.ResolveParameter( $ResolveParameter )
+                break
+            }
+            default { throw "Unhandled OutputKind: $OutputKind" }
+        }
+
+
+        $isBlank = [string]::IsNullOrWhiteSpace( $result )
+        if($isBlank -and $InputObject) {
+            'Object exists but the attribute is blank'
+                | Dotils.Write-DimText | Infa
+        }
+        return $result
+
+    }
+}
+function Picky.String.GetCrumbs {
+    <#
+    .SYNOPSIS
+        Split a string into chunks.'
+    .EXAMPLE
+        GetStringCrumbs -InputText 'bat man 3.14 cat, n!-choose-r' -SplitBy '[ ]'
+    .EXAMPLE
+        [WordCrumb]::new( 'foo bar 3.14 cat!bat; bat cat-dog', '\W+' )
+    .EXAMPLE
+        $w1 = [WordCrumb]::new( 'foo bar 3.14 cat!bat; bat cat-dog')
+        $w1.CrumbCount | Should -be 9
+        $w1.String = 'foo bar! cat'
+        $w1.CrumbCount | Should -be 3
+        $w1.String = 'foo bar'
+        $w1.CrumbCount | Should -be 2
+    #>
+    [Alias(
         'Picky.String.Crumbs',
         'String.GetCrumbs',
         'Pk.StrCrumbs',
@@ -275,40 +484,66 @@ function Picky.Add.IndexProp {
         # 'GetStringCrumbs'
     )]
     param(
-        [Parameter(Mandatory, ValueFromPipeline)]
-        [object[]]$InputObject
+        [string]$InputText,
+
+        [ArgumentCompletions(
+            '\W+',
+            '\b',
+            '\s+',
+            '\s',
+            "'[ ]'",
+            "'[ ]+'"
+
+        )]
+        [string]$SplitBy
     )
-    begin {
-        [List[Object]]$items = @()
-        $Index = 0
+    [WordCrumb]::new( $InputText, $SplitBy )
+}
+class WordCrumb {
+    <#
+    .DESCRIPTION
+        Example of a pwsh class with getters/setters that mutate the state
+        modify properties 'c.String' or 'c.SplitBy'
+    #>
+    [string[]]
+    $Crumbs = @()
+
+    [int]
+    $CrumbCount = 0
+
+    hidden [string]
+    $RawString
+
+    [string]
+    $_SplitBy = '\W+'
+
+    WordCrumb ( [string]$Text ) {
+        $This.RawString  = $Text
+        $This.Crumbs     = $Text -split $this._SplitBy
+        $this.CrumbCount = $This.Crumbs.Count
     }
-    process {
-        $items.AddRange(@( $InputObject ))
+    WordCrumb ( [string]$Text, [string]$SplitBy ) {
+        $This.RawString  = $Text
+        $this.Crumbs     = $Text -split $SplitBy
+        $this._SplitBy    = $SplitBy
+        $this.CrumbCount = $This.Crumbs.Count
     }
-    end {
-        $Items | %{
-            $addMemberSplat = @{
-                InputObject = $_
-                NotePropertyName = 'Index'
-                NotePropertyValue = $Index++
-                Force = $true
-                PassThru = $true
-                ErrorAction = 'ignore'
-            }
-            Add-Member @addMemberSplat
-        }
+    # rebuild
+    [void] Update () { # aka Recalculate()
+        # $this = [WordCrumb]::Parse( $This.RawString, $this._SplitBy )
+
+        $new = [WordCrumb]::Parse( $This.RawString, $this._SplitBy )
+        $this.Crumbs     = $New.Crumbs
+        $this.CrumbCount = $new.CrumbCount
+        $this.RawString  = $new.RawString
+        $this._SplitBy   = $new.SplitBy
+    }
+    static [WordCrumb] Parse( [string]$Text, [string]$SplitBy ) {
+        return [WordCrumb]::New( $Text, $SplitBy )
     }
 }
-
-function TryDropParams {
-    # drop the standard default CmdletBinding parameter names
-    [CmdletBinding()]
-    param(
-        [Parameter(Mandatory)]
-        $Text
-    )
-    throw 'nyi'
-
+$get_RawString = {
+    return $this.RawString
 }
 $set_RawString = {
     param( [string]$NewText )
@@ -365,12 +600,6 @@ $w1.Crumbs | Should -BeExactly @('f', ' bar')
 #>
 
 [List[object]]$ExportMemberPatterns = @(
-    if( $ModuleConfig.ExportPrefix.ShortTypeNames ) {
-        'pk.Str*'
-        'pk.Func*'
-        'pk.fn*'
-        'pk.Sb*'
-    }
     if( $ModuleConfig.ExportPrefix.String ) {
         'String.*'
         '*-String*'

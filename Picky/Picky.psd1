@@ -70,30 +70,34 @@ Description = 'To choose is to be picky'
 
 # Functions to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no functions to export.
 FunctionsToExport = @(
-    'Pk.*',
-    'Pick.*'
-    'Picky.*'
+    # 'Pk.*',
+    # 'Pick.*'
+    # 'Picky.*'
+    '*'
 )
 
 # Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no cmdlets to export.
 CmdletsToExport = @(
-    'Pk.*',
-    'Pick.*'
-    'Picky.*'
+    # 'Pk.*',
+    # 'Pick.*'
+    # 'Picky.*'
+    '*'
 )
 
 # Variables to export from this module
 VariablesToExport = @(
-    'Pk.*',
-    'Pick.*'
-    'Picky.*'
+    # 'Pk.*',
+    # 'Pick.*'
+    # 'Picky.*'
 )
 
 # Aliases to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no aliases to export.
 AliasesToExport = @(
-    'Pk.*',
-    'Pick.*'
-    'Picky.*'
+    # 'Pk.*',
+    # 'Pick.*'
+    # 'Picky.*'
+    # '*'
+    '*'
 
 )
 
