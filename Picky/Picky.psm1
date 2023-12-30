@@ -1,4 +1,24 @@
-using namespace System
+using namespace System.Collections.Generic
+using namespace System.Collections
+using namespace System.Management.Automation.Language
+using namespace System.Management.Automation
+using namespace System.Management
+
+$script:ModuleConfig = @{
+    # ExportAggressiveNames = $false
+    Verbose = @{
+        # OnEventA = $true
+    }
+    TemplateFromCacheMe = $false
+    ExportPrefix = @{
+        Picky  = $True
+        Pick   = $True
+        Pk     = $true
+        String = $True
+        Function = $true
+        ScriptBlock = $True
+        ShortTypeNames = $True
+    }
 
 function Picky.GetCommands {
     # quick summary of commands
@@ -11,10 +31,9 @@ function Picky.GetCommands {
 }
 function pk.Assert.Truthy {
     [Alias(
-        'pk.Is.Truthy',
-        'pk.Truthy'
-        # 'pk.Test.Truthy',
-        # 'pk.Assert.Truthy',
+        'ScriptBlock.GetInfo',
+        'pk.ScriptBlock',
+        'pk.Sb'
     )]
     param(
         [AllowEmptyCollection()]
@@ -52,13 +71,23 @@ function pk.Assert.Truthy {
     }
 }
 
-function pk.Assert.IsTypeInfo {
-    # [Alias(
-    #     # 'Is.Tinfo',
-    #     # 'Is?Tinfo',
-    #     # 'pk.Is.TypeInfo',
-    #     # 'pk.Is.Tinfo'
-    # )]
+            # Error ambigous. Possible matches include: -EnumsAsStrings -EscapeHandling -ErrorAction -ErrorVariable."
+
+    .notes
+        future info
+        - [ ] ParameterMetadata ResolveParameter(string name);
+        - [ ] DefaultParameterSet
+        - [ ] ScriptBlock
+        - [ ] CommandType
+
+        - [ ] (Jsonify) => Options, Description, Noun, Verb, Name, ModuleName, Source, Version
+    #>
+    [Alias(
+        'Function.GetInfo',
+        'pk.Function',
+        'pk.Func',
+        'pk.Fn',
+    )]
     [OutputType(
         'System.Bool'
         # , 'System.Void' # may throw
@@ -238,8 +267,12 @@ function Picky.Add.IndexProp {
             | Sort-Object Name | ft Name, Index, LastWriteTime
     #>
     [Alias(
-        'Picky.Add.IndexProp',
-        'pk.AddIndex'
+        'pk.Str.Crumbs',
+        'Picky.String.Crumbs',
+        'String.GetCrumbs',
+        'Pk.StrCrumbs',
+        'Pick-WordCrumbs'
+        # 'GetStringCrumbs'
     )]
     param(
         [Parameter(Mandatory, ValueFromPipeline)]
@@ -277,3 +310,104 @@ function TryDropParams {
     throw 'nyi'
 
 }
+$set_RawString = {
+    param( [string]$NewText )
+    $this.RawString = $NewText
+    $this.Update()
+}
+
+$get_SplitBy = {
+    return $this._SplitBy
+}
+$set_SplitBy = {
+    param( [string]$SplitBy )
+    $this._SplitBy = $SplitBy
+    $this.Update()
+}
+
+$add_ScriptProperty = @{
+      MemberType    = 'ScriptProperty'
+      Force         = $true
+      TypeName      = 'WordCrumb'
+    # TypeConverter = '.'
+    # TypeAdapter   = '.'
+    # TypeData      = ''
+}
+
+$updateTypeDataSplat = @{
+    MemberName  = 'String'
+    Value       = $get_RawString
+    SecondValue = $set_RawString
+}
+Update-TypeData @updateTypeDataSplat @add_ScriptProperty
+
+$updateTypeDataSplat = @{
+    MemberName  = 'SplitBy'
+    Value       = $get_SplitBy
+    SecondValue = $set_SplitBy
+}
+Update-TypeData @updateTypeDataSplat @add_ScriptProperty
+
+<#
+[WordCrumb]::new( 'foo bar 3.14 cat!bat; bat cat-dog', '\W+' )
+[WordCrumb]::new( 'foo bar 3.14 cat!bat; bat cat-dog')
+
+$w1 = [WordCrumb]::new( 'foo bar 3.14 cat!bat; bat cat-dog')
+$w1.CrumbCount | Should -be 9
+$w1.String = 'foo bar! cat'
+$w1.CrumbCount | Should -be 3
+$w1.String = 'foo bar'
+$w1.CrumbCount | Should -be 2
+
+$w1.SplitBy = 'oo'
+$w1.Crumbs | Should -BeExactly @('f', ' bar')
+
+#>
+
+[List[object]]$ExportMemberPatterns = @(
+    if( $ModuleConfig.ExportPrefix.ShortTypeNames ) {
+        'pk.Str*'
+        'pk.Func*'
+        'pk.fn*'
+        'pk.Sb*'
+    }
+    if( $ModuleConfig.ExportPrefix.String ) {
+        'String.*'
+        '*-String*'
+        'Str.*'
+        '*-Str*'
+    }
+    if( $ModuleConfig.ExportPrefix.Function ) {
+        'Function.*'
+        '*-Function*'
+    }
+    if( $ModuleConfig.ExportPrefix.ScriptBlock ) {
+        'ScriptBlock.*'
+        '*-ScriptBlock*'
+    }
+    if( $ModuleConfig.ExportPrefix.Picky ) {
+        'Picky.*'
+        '*-Picky*'
+    }
+    if( $ModuleConfig.ExportPrefix.Pick ) {
+        'Pick.*'
+        '*-Pick*'
+    }
+    if( $ModuleConfig.ExportPrefix.Pk ) {
+        'Pk.*'
+        '*-Pk*'
+    }
+)
+
+$ExportMemberPatterns
+    | Join-String -op 'Picky::ExportMemberPatterns := ' -sep ', ' | Write-Verbose
+
+Export-ModuleMember -Function @(
+    $ExportMemberPatterns
+) -Alias @(
+    $ExportMemberPatterns
+) -Variable @(
+    $ExportMemberPatterns
+    'Picky_*'
+    'PK_*'
+)
