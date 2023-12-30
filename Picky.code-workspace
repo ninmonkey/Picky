@@ -1,4 +1,4 @@
-{ //2023-11-26
+{ // 2023-11-26 // 2023-12-09
     "folders": [
         {
             "path": "."
@@ -13,6 +13,13 @@
                 "type": "PowerShell",
                 "request": "launch",
                 "script": "${workspaceRoot}/debug_harness.ps1",
+                "cwd": "${workspaceRoot}"
+            },
+            {
+                "name": "Debug_Harness2.ps1🚀",
+                "type": "PowerShell",
+                "request": "launch",
+                "script": "${workspaceRoot}/debug_harness2.ps1",
                 "cwd": "${workspaceRoot}"
             }
         ]
