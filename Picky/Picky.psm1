@@ -10,12 +10,12 @@ $script:ModuleConfig = @{
     }
     TemplateFromCacheMe = $false
     ExportPrefix = @{
-        Picky  = $True
-        Pick   = $True
-        Pk     = $true
-        String = $True
-        Function = $true
-        ScriptBlock = $True
+        Picky          = $True
+        Pick           = $True
+        Pk             = $true
+        String         = $True
+        Function       = $true
+        ScriptBlock    = $True
         ShortTypeNames = $True
     }
 }
@@ -101,7 +101,8 @@ function Picky.ScriptBlock.GetInfo {
     #>
     [Alias(
         'ScriptBlock.GetInfo',
-        'pk.ScriptBlock'
+        'pk.ScriptBlock',
+        'pk.Sb'
     )]
     [OutputType(
         'PSModuleInfo'
@@ -240,7 +241,9 @@ function Picky.Function.GetInfo {
     #>
     [Alias(
         'Function.GetInfo',
-        'pk.Function'
+        'pk.Function',
+        'pk.Func',
+        'pk.fn'
     )]
     [OutputType(
         'ScriptBlock',
@@ -298,17 +301,17 @@ function Picky.Function.GetInfo {
         switch( $OutputKind ) {
 
             'Attributes' {
-                $result  = $Input.ScriptBlock.Attributes
+                $result  = $InputObject.ScriptBlock.Attributes
                 break
             }
             'ScriptBlock' {
                 # -is [ScriptBlock]
-                $result  = $Input.ScriptBlock
+                $result  = $InputObject.ScriptBlock
                 break
             }
             'Module' {
                 # is [PSModuleInfo]
-                $result  = $input.Module
+                $result  = $InputObject.Module
                 break
             }
             'Parameters' {
@@ -358,7 +361,7 @@ function Picky.String.GetCrumbs {
     [Alias(
         'Picky.String.Crumbs',
         'String.GetCrumbs',
-        'Pk.StrCrumbs',
+        'pk.Str.Crumbs',
         'Pick-WordCrumbs'
         # 'GetStringCrumbs'
     )]
@@ -479,6 +482,14 @@ $w1.Crumbs | Should -BeExactly @('f', ' bar')
 #>
 
 [List[object]]$ExportMemberPatterns = @(
+
+    if( $ModuleConfig.ExportPrefix.ShortTypeNames ) {
+        'pk.Str*'
+        'pk.Func*'
+        'pk.fn*'
+        'pk.Sb*'
+    }
+
     if( $ModuleConfig.ExportPrefix.String ) {
         'String.*'
         '*-String*'
