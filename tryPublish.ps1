@@ -1,4 +1,4 @@
-
+build
 $App = Get-Content (Join-Path $PSScriptRoot './app.json') | ConvertFrom-Json
 
 $newestBuild =
@@ -19,7 +19,7 @@ $publishPSResourceSplat = @{
 
 }
 
-Publish-PSResource @publishPSResourceSplat
+Publish-PSResource @publishPSResourceSplat -Confirm
 
 Get-Item $publishPSResourceSplat.DestinationPath
     | Join-String -op 'Output Nuget: ' | Write-Host -back 'darkgreen'
