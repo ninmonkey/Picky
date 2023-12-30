@@ -15,6 +15,8 @@ $script:ModuleConfig = @{
         Pick   = $True
         Pk     = $true
         String = $True
+        Function = $true
+        ScriptBlock = $True
     }
 
 }
@@ -186,9 +188,9 @@ function Function.GetInfo {
     [OutputType(
         'ScriptBlock',
         'PSModuleInfo',
-        '[IDictionary[string, [System.Management.Automation.ParameterMetadata]]]',
-        '[Collections.ObjectModel.ReadOnlyCollection[Management.Automation.CommandParameterSetInfo]]'
-
+        '[IDictionary[string, [Management.Automation.ParameterMetadata]]]',
+        '[Collections.ObjectModel.ReadOnlyCollection[Management.Automation.CommandParameterSetInfo]]',
+        'Management.Automation.ParameterMetadata'
     )]
     [CmdletBinding(DefaultParameterSetName='FromPipe')]
     param(
@@ -205,12 +207,20 @@ function Function.GetInfo {
             'ScriptBlock',
             'Module',
             'Parameters',
+            'ResolveParameter',
             'ParameterSets'
         )]
-        [string]$OutputKind
+        [string]$OutputKind,
+
+        [Parameter()]
+        [String]$ResolveParameter
     )
-    # future: assert properties exist
     process {
+        if($PSBoundParameters.ContainsKey('ResolveParameter')) {
+            if($OutputKind -ne 'ResolveParameter') { throw "Invalid OutputKind, must be ResolveParameter using ResolveParameter"}
+        }
+
+        # future: assert properties exist
         if( $InputObject -isnot [CommandInfo] -and $InputObject -isnot [FunctionInfo]) {
             'Expected A <CommandInfo | FunctionInfo>. Actual: {0}' -f @(
                 $InputObject.GetType().Name
@@ -225,6 +235,7 @@ function Function.GetInfo {
         # if( -not $InputObject -isnot 'F')
         if($Null -eq $InputObject) { return }
         switch( $OutputKind ) {
+
             'Attributes' {
                 $result  = $Input.ScriptBlock.Attributes
                 break
@@ -247,6 +258,11 @@ function Function.GetInfo {
             'ParameterSets' {
                 # -is [ReadOnlyCollection<CommandParameterSetInfo>]
                 $result  = $InputObject.ParameterSets
+                break
+            }
+            'ResolveParameter' {
+                # -is [ParameterMetadata]
+                $result  = $InputObject.ResolveParameter( $ResolveParameter )
                 break
             }
             default { throw "Unhandled OutputKind: $OutputKind" }
@@ -410,6 +426,14 @@ $w1.Crumbs | Should -BeExactly @('f', ' bar')
     if( $ModuleConfig.ExportPrefix.Picky ) {
         'Picky.*'
         '*-Picky*'
+    }
+    if( $ModuleConfig.ExportPrefix.Function ) {
+        'Function.*'
+        '*-Function*'
+    }
+    if( $ModuleConfig.ExportPrefix.ScriptBlock ) {
+        'ScriptBlock.*'
+        '*-ScriptBlock*'
     }
     if( $ModuleConfig.ExportPrefix.Pick ) {
         'Pick.*'
