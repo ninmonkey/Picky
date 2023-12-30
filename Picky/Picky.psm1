@@ -5,7 +5,6 @@ using namespace System.Management.Automation
 using namespace System.Management
 
 $script:ModuleConfig = @{
-    # ExportAggressiveNames = $false
     Verbose = @{
         # OnEventA = $true
     }
@@ -19,6 +18,7 @@ $script:ModuleConfig = @{
         ScriptBlock = $True
         ShortTypeNames = $True
     }
+}
 
 function Picky.GetCommands {
     # quick summary of commands
@@ -29,129 +29,8 @@ function Picky.GetCommands {
         #     Get-Command Pk*
     # }
 }
-function pk.Assert.Truthy {
-    [Alias(
-        'ScriptBlock.GetInfo',
-        'pk.ScriptBlock',
-        'pk.Sb'
-    )]
-    param(
-        [AllowEmptyCollection()]
-        [AllowEmptyString()]
-        [AllowNull()]
-        [Parameter(Mandatory)]
-        [object]$InputObject,
 
-        # return a bool instead of throwing
-        [Alias('TestOnly', 'AsError')]
-        [switch]$AsBool,
-
-        [switch]$IsNot
-    )
-    # if($MyInvocation.MyCommand.Name -match '\btest\b|\bis\b'){
-    if(
-        ( $MyInvocation.MyCommand.Name -match '\btest\b|\bis\b' ) -and
-        ( $MyInvocation.MyCommand.Name -notmatch 'assert' )
-    ){
-        $AsBool = $True
-    }
-
-
-    $isTruthy = [bool]$InputObject
-    $IsNotTruthy = -not [bool]$InputObject
-
-    if($AsBool) {
-        if( $IsNot ) { return -not $IsTruthy }
-        else { return $isTruthy}
-    }
-    if( -not $isTruthy ) {
-        [ArgumentException]::new(
-        <# paramName: #> 'InputObject',
-        <# message: #> 'Was not truthy')
-    }
-}
-
-            # Error ambigous. Possible matches include: -EnumsAsStrings -EscapeHandling -ErrorAction -ErrorVariable."
-
-    .notes
-        future info
-        - [ ] ParameterMetadata ResolveParameter(string name);
-        - [ ] DefaultParameterSet
-        - [ ] ScriptBlock
-        - [ ] CommandType
-
-        - [ ] (Jsonify) => Options, Description, Noun, Verb, Name, ModuleName, Source, Version
-    #>
-    [Alias(
-        'Function.GetInfo',
-        'pk.Function',
-        'pk.Func',
-        'pk.Fn',
-    )]
-    [OutputType(
-        'System.Bool'
-        # , 'System.Void' # may throw
-    )]
-    param(
-        [AllowEmptyCollection()]
-        [AllowEmptyString()]
-        [AllowNull()]
-        [Parameter(Mandatory)]
-        [object]$InputObject,
-
-        # return a bool instead of throwing
-        [Alias('TestOnly', 'AsError')]
-        [switch]$AsBool
-    )
-    $test = $InputObject -is 'type'
-    if($AsBool) { return $test }
-    if(-not $test) {
-        throw [ArgumentException]::new(
-            <# message: #> 'Was not a typeInfo',
-            <# paramName: #> 'InputObject' )
-    }
-}
-function pk.Assert.IsArray {
-    param(
-        [AllowEmptyCollection()]
-        [AllowEmptyString()]
-        [AllowNull()]
-        [Parameter(Mandatory)]
-        [object]$InputObject,
-
-        # return a bool instead of throwing
-        [Alias('TestOnly', 'AsError')]
-        [switch]$AsBool
-    )
-    $tinfo = ( $InputObject )?.GetType()
-    $test = [System.Management.Automation.LanguagePrimitives]::GetEnumerable(
-        $InputObject) -is [object]
-
-    if( $AsBool ) { return $test }
-    if( -not $Test ) {
-        throw [ArgumentException]::new(
-            <# message: #> 'Was not an array. -not LangPrimitive::GetEnumerable',
-            <# paramName: #> 'InputObject')
-    }
-}
-function pk.Assert.NotEmpty.List {
-    param(
-        [AllowEmptyCollection()]
-        [AllowEmptyString()]
-        [AllowNull()]
-        [Parameter(Mandatory)]
-        [object]$InputObject,
-
-        # return a bool instead of throwing
-        [Alias('TestOnly', 'AsError')]
-        [switch]$AsBool
-    )
-    if( $MyInvocation.InvocationName -in @('pk.Test.NotTrueNull')) {
-        $Asbool = $true
-    }
-
-}
-[hashtable]$script:Cache = @{}
+# [hashtable]$script:Cache = @{}
 # if($Script:ModuleConfig.VerboseJson_ArgCompletions) {
 #     (Join-Path (gi 'temp:\') 'CacheMeIfYouCan.ArgCompletions.log')
 #     | Join-String -op 'CacheMeIfYouCan: VerboseLogging for ArgCompletions is enabled at: '
