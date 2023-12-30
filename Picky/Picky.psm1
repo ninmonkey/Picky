@@ -171,11 +171,18 @@ function Function.GetInfo {
         Quickly and easily grab properties and metadata for [CommandInfo], [FunctionInfo] etc
     .EXAMPLE
         # use auto completion
-        Pwsh> gcm 'DoWork' | Function.GetInfo Parameters
+        Pwsh> gcm 'DoWork'
+            | Function.GetInfo Parameters
     .LINK
         Picky\Function.GetInfo
     .LINK
         Picky\ScriptBlock.GetInfo
+    .LINK
+        Gcm ConvertTo-Json
+            | Function.GetInfo ResolveParameter -ResolveParameter 'e'
+
+            # Error ambigous. Possible matches include: -EnumsAsStrings -EscapeHandling -ErrorAction -ErrorVariable."
+
     .notes
         future info
         - [ ] ParameterMetadata ResolveParameter(string name);
@@ -212,6 +219,10 @@ function Function.GetInfo {
         )]
         [string]$OutputKind,
 
+        # Appears to resolve what parameters will resolve using a partial match
+        # essentially: Name -like 'query*'
+        # case-insensitive. Blank strings throw errors
+        # also throws when value is ambigious
         [Parameter()]
         [String]$ResolveParameter
     )
