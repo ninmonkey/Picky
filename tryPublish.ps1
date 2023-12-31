@@ -7,6 +7,27 @@ $env:BuildModuleName = 'Picky'
 $App = Get-Content (Join-Path $PSScriptRoot './app.json' | gi -ea 'stop' ) | ConvertFrom-Json
 
 $PSDefaultParameterValues['BuildIt-*:verbose'] = $true
+
+
+function __Render.ParamAstNames {
+    param(
+        [ParameterAst[]]$ParameterAst,
+        [ArgumentCompletions('"`n"', ', ')]
+        [string]$Separator = "`n"
+    )
+
+    $joinStringSplat = @{
+        Separator = $Separator
+        Property = {@(
+            $_.StaticType | Fmt.ShortType
+            ': '
+            $_.Name
+        ) -join ''}
+    }
+    $ParameterAst | Join-String @joinStringSplat
+}
+
+
 class BuildItCommandNameCompleter : IArgumentCompleter {
     # auto complete functions in this file
     [IEnumerable[CompletionResult]] CompleteArgument(
@@ -18,29 +39,40 @@ class BuildItCommandNameCompleter : IArgumentCompleter {
     ) {
 
         $doc = Dotils.AstFromFile -FileName $PSCommandPath
-        $topLevelCommands = $doc.Ast.FindAll(
+        [List[FunctionDefinitionAst]]$topLevelCommands = @( $doc.Ast.FindAll(
             {
                 param( [Ast]$Ast )
                 end {
                         $t = $Ast -is [FunctionDefinitionAst]
                         return $t
                 }
-            }, $false) | % Name | Sort-Object -Unique
+            }, $false) #| % Name | Sort-Object -Unique
+        )
 
         [List[CompletionResult]]$CompletionResults = @(
             $TopLevelCommands
+                | Sort-Object Name
                 | ?{
-                    $_ -match [regex]::Escape( $WordToComplete )
-                }
-                |  %{
+                    $_.Name -match [regex]::Escape( $WordToComplete )
+                } | %{
+                    [FunctionDefinitionAst]$curCmd = $_
+                    [string]$Tooltip =
+                        __Render.ParamAstNames $curCmd.Body.ParamBlock.Parameters
+                        | Join-String -sep "`n"
 
-                [CompletionResult]::new(
-                    $_,
-                    $_,
-                    [CompletionResultType]::ParameterValue,
-                    $_
-                )
-            }
+                    if( [string]$Tooltip.Length -eq '') {
+                        $Tooltip = "`u{2400}"
+                    }
+
+
+                   return  [CompletionResult]::new(
+                        <# completionText#> $curCmd.Name,
+                        <# listItemText #> $curCmd.Name,
+                        [CompletionResultType]::ParameterValue,
+                        <# tooltip #> $Tooltip
+                    )
+                }
+
         )
         return $CompletionResults
     }
@@ -65,7 +97,8 @@ function BuildItCmd {
         [object[]]$Params
     )
     if($ListCommands) {
-
+        'command listing....nyi'
+        return
     }
 
     'invoke BuildIt-{0}' -f @($BuildCommand )| write-host -bg 'darkgreen'

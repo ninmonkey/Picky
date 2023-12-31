@@ -171,6 +171,7 @@ function Picky.ScriptBlock.GetInfo {
             'PathWithLine' {
                 # -is [string]
                 [PSToken]$Pos     = $InputObject.StartPosition
+                # refactor: this is almost a duplicate of Picky.ScriptExtent.GetInfo, but not 100%
                 [int]$StartLine   = $Pos.StartLine
                 [int]$StartCol    = $Pos.StartColumn
                 [int]$EndLine     = $Pos.EndLine # prop: NotYetUsed
