@@ -1,7 +1,7 @@
 using namespace System.Collections.Generic
 using namespace System.Management.Automation
 using namespace System.Management.Automation.Language
-
+err -Clear
 $env:BuildModuleName = 'Picky'
 # created: 2023-12-17
 $App = Get-Content (Join-Path $PSScriptRoot './app.json' | gi -ea 'stop' ) | ConvertFrom-Json
@@ -47,23 +47,33 @@ class BuildItCommandNameCompleter : IArgumentCompleter {
 }
 
 function BuildItCmd {
-    [CmdletBinding()]
+    <#
+    .SYNOPSIS
+    base command that invokes completions for invoking the rest
+    #>
+    [CmdletBinding(DefaultParameterSetName='InvokeCommand')]
     param(
-        [Parameter(Mandatory)]
+        [Parameter(ParameterSetName = 'ListOnly', Mandatory)]
+        [switch]$ListCommands,
+
+        [Parameter(Mandatory, ParameterSetName='InvokeCommand', Position=0)]
         [ValidateNotNullOrWhiteSpace()]
         [ArgumentCompleter( [BuildItCommandNameCompleter] )]
-        [string]$BuildCommandName
+        [string]$BuildCommandName,
+
+        [Alias('Args', 'ArgList', 'InputObject',  'InObj')]
+        [object[]]$Params
     )
+    if($ListCommands) {
+
+    }
+
     'invoke BuildIt-{0}' -f @($BuildCommand )| write-host -bg 'darkgreen'
+    $VerbosePreference = 'Continue'
+    & $buildCommandName $params
+    $VerbosePreference = 'SilentlyContinue'
 }
-function BuiltIt-TryImportInstalled {
-    param(
-        [Alias('Path')]
-        [object]$NewestInstalledModule
-    )
-    Import-Module $NewestInstalledModule -force -PassThru -ea 'stop'
-        | Join-string -op 'InstallModule: Import should not throw: '
-}
+
 
 @'
 
@@ -79,13 +89,49 @@ todo:
 '@
 
 # [1]
-function BuildIt-ModuleBuild {
+function BuildIt-ModuleBuildOnly {
+    <#
+    .SYNOPSIS
+        simple invoke, build-Module and nothing else
+    #>
     [CmdletBinding()]
     param()
     build-module -Verbose
 }
 
-function BuildIt-TryModuleBuild {
+function CleanUp-ModuleBuilder {
+     <#
+    .SYNOPSIS
+        Cleanup all folders created by 'BuildModule'
+    #>
+    [CmdletBinding()]
+    param(
+        # Module name, else falls back to:  Env:BuildModuleName
+        [string]$ModuleName
+    )
+    throw 'NYI'
+    if( -not $PSBoundParameters.ContainsKey('ModuleName') ) { $ModuleName = $Env:BuildModuleName }
+    'ModuleName: {0}' -f $ModuleName | Write-verbose
+}
+function CleanUp-InstallModule {
+     <#
+    .SYNOPSIS
+        Cleanup all folders created by 'BuildModule'
+    #>
+    [CmdletBinding()]
+    param(
+        # Module name, else falls back to:  Env:BuildModuleName
+        [string]$ModuleName
+    )
+    throw 'NYI'
+    if( -not $PSBoundParameters.ContainsKey('ModuleName') ) { $ModuleName = $Env:BuildModuleName }
+    'ModuleName: {0}' -f $ModuleName | Write-verbose
+}
+function BuildIt-ModuleBuilder {
+    <#
+    .SYNOPSIS
+        build-Module and and calculate paths
+    #>
     [CmdletBinding()]
     param(
         # Module name, else falls back to:  Env:BuildModuleName
@@ -119,7 +165,47 @@ function BuildIt-TryModuleBuild {
     $NewestBuildModule
         | Join-String -op 'newestBuildRoot =: ' | Write-Host -back 'darkgreen'
 }
-function BuildIt-TryImportModuleBuilder {
+
+function BuildIt-Publish {
+    <#
+    .SYNOPSIS
+        Try invoking Publish-PSResource with confirmation
+    #>
+    [CmdletBinding()]
+    param(
+        # Module name, else falls back to:  Env:BuildModuleName
+        [string]$ModuleName
+    )
+    if( -not $PSBoundParameters.ContainsKey('ModuleName') ) { $ModuleName = $Env:BuildModuleName }
+    'ModuleName: {0}' -f $ModuleName | Write-verbose
+
+    # remove old nugets
+    gci "g:\temp\lastPwshNuget-${ModuleName}" "${ModuleName}.*.nupkg"| Remove-Item
+
+    # Publish-Module -Name "Picky" -NuGetApiKey $App.NugetApiKey -WhatIf
+    $publishPSResourceSplat = @{
+        ApiKey          = $App.NuGetApiKey
+        Confirm         = $true
+        DestinationPath = "g:\temp\lastPwshNuget-${ModuleName}"
+        Path            = $newestBuildRoot
+        Repository      = 'PSGallery'
+        Verbose         = $true
+        # WhatIf          = $true
+
+    }
+
+    # [3]
+    Publish-PSResource @publishPSResourceSplat
+
+    Get-Item $publishPSResourceSplat.DestinationPath
+        | Join-String -op 'Output Nuget: ' | Write-Host -back 'darkgreen'
+}
+
+function ImportFrom-ModuleBuilder {
+    <#
+    .SYNOPSIS
+        Import-Module from the build-dist folder, rather than here
+    #>
     [CmdletBinding()]
     param(
         # Module name, else falls back to:  Env:BuildModuleName
@@ -155,38 +241,11 @@ function BuildIt-TryImportModuleBuilder {
     Import-Module $NewestBuildModule -force -PassThru -ea 'stop'
         | Join-string -op 'BuiltModule: Import should not throw: '
 }
-function BuildIt-TryPublish {
-    [CmdletBinding()]
-    param(
-        # Module name, else falls back to:  Env:BuildModuleName
-        [string]$ModuleName
-    )
-    if( -not $PSBoundParameters.ContainsKey('ModuleName') ) { $ModuleName = $Env:BuildModuleName }
-    'ModuleName: {0}' -f $ModuleName | Write-verbose
-
-    # remove old nugets
-    gci "g:\temp\lastPwshNuget-${ModuleName}" "${ModuleName}.*.nupkg"| Remove-Item
-
-    # Publish-Module -Name "Picky" -NuGetApiKey $App.NugetApiKey -WhatIf
-    $publishPSResourceSplat = @{
-        ApiKey          = $App.NuGetApiKey
-        Confirm         = $true
-        DestinationPath = "g:\temp\lastPwshNuget-${ModuleName}"
-        Path            = $newestBuildRoot
-        Repository      = 'PSGallery'
-        Verbose         = $true
-        # WhatIf          = $true
-
-    }
-
-    # [3]
-    Publish-PSResource @publishPSResourceSplat
-
-    Get-Item $publishPSResourceSplat.DestinationPath
-        | Join-String -op 'Output Nuget: ' | Write-Host -back 'darkgreen'
-}
-
-function BuildIt-TryInstallPublished {
+function ImportFrom-InstallModule {
+    <#
+    .SYNOPSIS
+        Import-Module from the 'Install-MOdule's version of this module
+    #>
     [CmdletBinding()]
     param(
         # Module name, else falls back to:  Env:BuildModuleName
@@ -209,7 +268,17 @@ function BuildIt-TryInstallPublished {
 
     if( -not $NewestInstalledModule ) { throw "missing NewestINstalledModule!"}
 
-    BuildIt-TryImportInstalled -Path $NewestInstalledModule
     # [4]
+    $importModuleSplat = @{
+        DisableNameChecking = $true
+        ErrorAction         = 'stop'
+        Force               = $true
+        Name                = $NewestInstalledModule
+        PassThru            = $true
+        Verbose             = $true
+    }
+
+    Import-Module @importModuleSplat
+        | Join-string -op 'InstallModule: Import should not throw: '
 
 }
