@@ -4,8 +4,9 @@ using namespace System.Management.Automation.Language
 
 $env:BuildModuleName = 'Picky'
 # created: 2023-12-17
-$App = Get-Content (Join-Path $PSScriptRoot './env.json' | gi -ea 'stop' ) | ConvertFrom-Json
+$App = Get-Content (Join-Path $PSScriptRoot './app.json' | gi -ea 'stop' ) | ConvertFrom-Json
 
+$PSDefaultParameterValues['BuildIt-*:verbose'] = $true
 class BuildItCommandNameCompleter : IArgumentCompleter {
     # auto complete functions in this file
     [IEnumerable[CompletionResult]] CompleteArgument(
@@ -79,20 +80,21 @@ todo:
 
 # [1]
 function BuildIt-ModuleBuild {
-    build-module
+    [CmdletBinding()]
+    build-module -Verbose
 }
 
 function BuildIt-TryModuleBuild {
     [CmdletBinding()]
     param(
+        # Module name, else falls back to:  Env:BuildModuleName
         [string]$ModuleName
     )
-    $ModuleName ??= $env:BuildModuleName
-
-
+    if( -not $PSBoundParameters('ModuleName') ) { $ModuleName = $Env:BuildModuleName }
     'ModuleName: {0}' -f $ModuleName | Write-verbose
+
     $pathTemplate =
-        'H:\data\2023\pwsh\PsModules\{0}\{0}\..\..\..\PsModules.import\{0}' -f $ModuleName
+        'H:\data\2023\pwsh\PsModules\{0}\{0}\..\..\..\PsModules.import\{0}' -f @( $ModuleName )
 
     $PathTemplate | Join-String -op 'pathTemplate: ' | write-verbose
     # sample value: 'H:\data\2023\pwsh\PsModules\CacheMeIfYouCan\CacheMeIfYouCan\..\..\..\PsModules.import\CacheMeIfYouCan'
@@ -119,11 +121,12 @@ function BuildIt-TryModuleBuild {
 function BuildIt-TryImportModuleBuilder {
     [CmdletBinding()]
     param(
+        # Module name, else falls back to:  Env:BuildModuleName
         [string]$ModuleName
     )
-    $ModuleName ??= $env:BuildModuleName
-
+    if( -not $PSBoundParameters('ModuleName') ) { $ModuleName = $Env:BuildModuleName }
     'ModuleName: {0}' -f $ModuleName | Write-verbose
+
     $pathTemplate =
         'H:\data\2023\pwsh\PsModules\{0}\{0}\..\..\..\PsModules.import\{0}' -f $ModuleName
 
@@ -153,10 +156,13 @@ function BuildIt-TryImportModuleBuilder {
 }
 function BuildIt-TryPublish {
     [CmdletBinding()]
-    param( [string]$ModuleName )
-    $ModuleName ??= $env:BuildModuleName
-
+    param(
+        # Module name, else falls back to:  Env:BuildModuleName
+        [string]$ModuleName
+    )
+    if( -not $PSBoundParameters('ModuleName') ) { $ModuleName = $Env:BuildModuleName }
     'ModuleName: {0}' -f $ModuleName | Write-verbose
+
     # remove old nugets
     gci "g:\temp\lastPwshNuget-${ModuleName}" "${ModuleName}.*.nupkg"| Remove-Item
 
@@ -182,9 +188,11 @@ function BuildIt-TryPublish {
 function BuildIt-TryInstallPublished {
     [CmdletBinding()]
     param(
+        # Module name, else falls back to:  Env:BuildModuleName
         [string]$ModuleName
     )
-    $ModuleName ??= $env:BuildModuleName
+    if( -not $PSBoundParameters('ModuleName') ) { $ModuleName = $Env:BuildModuleName }
+    'ModuleName: {0}' -f $ModuleName | Write-verbose
 
     Remove-Module "${ModuleName}*"
     Uninstall-module $ModuleName -ea 'continue'
