@@ -81,6 +81,7 @@ todo:
 # [1]
 function BuildIt-ModuleBuild {
     [CmdletBinding()]
+    param()
     build-module -Verbose
 }
 
@@ -90,7 +91,7 @@ function BuildIt-TryModuleBuild {
         # Module name, else falls back to:  Env:BuildModuleName
         [string]$ModuleName
     )
-    if( -not $PSBoundParameters('ModuleName') ) { $ModuleName = $Env:BuildModuleName }
+    if( -not $PSBoundParameters.ContainsKey('ModuleName') ) { $ModuleName = $Env:BuildModuleName }
     'ModuleName: {0}' -f $ModuleName | Write-verbose
 
     $pathTemplate =
@@ -124,7 +125,7 @@ function BuildIt-TryImportModuleBuilder {
         # Module name, else falls back to:  Env:BuildModuleName
         [string]$ModuleName
     )
-    if( -not $PSBoundParameters('ModuleName') ) { $ModuleName = $Env:BuildModuleName }
+    if( -not $PSBoundParameters.ContainsKey('ModuleName') ) { $ModuleName = $Env:BuildModuleName }
     'ModuleName: {0}' -f $ModuleName | Write-verbose
 
     $pathTemplate =
@@ -160,7 +161,7 @@ function BuildIt-TryPublish {
         # Module name, else falls back to:  Env:BuildModuleName
         [string]$ModuleName
     )
-    if( -not $PSBoundParameters('ModuleName') ) { $ModuleName = $Env:BuildModuleName }
+    if( -not $PSBoundParameters.ContainsKey('ModuleName') ) { $ModuleName = $Env:BuildModuleName }
     'ModuleName: {0}' -f $ModuleName | Write-verbose
 
     # remove old nugets
@@ -191,7 +192,7 @@ function BuildIt-TryInstallPublished {
         # Module name, else falls back to:  Env:BuildModuleName
         [string]$ModuleName
     )
-    if( -not $PSBoundParameters('ModuleName') ) { $ModuleName = $Env:BuildModuleName }
+    if( -not $PSBoundParameters.ContainsKey('ModuleName') ) { $ModuleName = $Env:BuildModuleName }
     'ModuleName: {0}' -f $ModuleName | Write-verbose
 
     Remove-Module "${ModuleName}*"
