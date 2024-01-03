@@ -1,4 +1,10 @@
 ﻿$modPath = Join-Path $PSScriptRoot '../Picky/Picky.psm1'
+impo $modPath -force -PassThru | Join-String { $_.Name, $_.Version, $_.Path}
+
+impo nin.Ast -force -PassThru -ea 'stop'
+
+
+
 $astDoc = Dotils.Ast.GetAstFromFile -FileName $modPath
 $root = $astDoc.Ast
 
@@ -23,5 +29,18 @@ updateTypeDataSplat    False System.Object                                    $u
 
 
 'sketch at
-    <file:///H:\data\2023\pwsh\sketches\2023-01-01-Ast-of-mymodule\AST-types-from-AST-Parsing.ps1>
+    <file:///H:\data\2023\pwsh\sketches\2023-01-01-Ast-of-mymodule\AST-types-from-AST-Parsing.ps1>  # older one
+    <file:///H:\data\2023\pwsh\sketches\2023-01-01-Ast-of-mymodule\Ast-GeneratingDocs.ps1>
     ' | write-warning
+
+
+$root | Nin.Ast.FindIt AttributeAst
+|ft
+
+
+# function Dotils.Accum.Hashtable {
+#     # iteratively appending, multiple invokes verses a normal hash merge
+#     param(
+
+#     )
+# }

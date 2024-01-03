@@ -72,6 +72,98 @@ if($ModuleConfig.TemplateFromCacheMe) {
             WriteBg $ColorBg ) -join ''
     }
 }
+function Picky.Type.GetInfo {
+        <#
+    .SYNOPSIS
+        Quickly and easily grab properties and metadata from types
+    .EXAMPLE
+        Pwsh>
+    .notes
+        future info
+        - [ ] other scriptblock/function types
+        - [ ] DefaultParameterSet
+        - [ ] (Jsonify) => Id, Ast, Module, Etc...
+    #>
+    [Alias(
+        'Type.GetInfo',
+        'pk.Type',
+        'pk.Tinfo'
+    )]
+    [OutputType(
+        'PSModuleInfo'
+
+    )]
+    [CmdletBinding(DefaultParameterSetName='FromPipe')]
+    param(
+        [Parameter( Mandatory, ParameterSetName='FromPipe',  ValueFromPipeline, ValueFromPipelineByPropertyName)]
+        [Parameter( Mandatory, ParameterSetName='FromParam', Position = 0 )]
+        [Alias('Name', 'Type', 'TypeInfo', 'InObj', 'Obj')]
+        [object]$InputObject,
+
+        [Parameter( ParameterSetName='FromPipe',  Position = 0 )]
+        [Parameter( ParameterSetName='FromParam', Position = 1 )]
+        [Parameter()]
+        [ValidateSet(
+            'Name',
+            'Namespace',
+            'ShortName',
+            'ShortNamespace'
+        )]
+        [string]$OutputKind = 'ShortName',
+        [switch]$PassThru
+    )
+    # future: assert properties exist
+    process {
+        if($Null -eq $InputObject) { return }
+        # [ScriptBlock]$ObjAsSB = $InputObject
+        if($InputObject -is [type]) {
+            $tinfo = $InputObject
+        } elseif ($InputObject -is [string]){
+            $tinfo = $InputObject -as [type]
+        } else {
+            $tinfo = $InputObject.GetType()
+        }
+        if(! $tinfo) { throw "InvalidState: Tinfo wa snull"}
+
+        $meta = [ordered]@{
+            SourceObj      = $InputObject #?? "`u{2400}"
+            Tinfo          = $tinfo #?? "`u{2400}"
+            Name           = $InputObject | Dotils.Format-ShortType
+            Namespace      = $InputObject | Dotils.Format-ShortNamespace
+            ShortName      = $InputObject | Dotils.Format-ShortType -MinNamespaceCrumbCount 1
+            ShortNamespace = $InputObject | Dotils.Format-ShortNamespace -MinCount 1
+        }
+        if($PassThru) { return [pscustomobject]$Meta }
+
+        switch( $OutputKind ) {
+            'Name' {
+                # -is [List[Attribute]]
+                $result  = $Tinfo.Name
+                break
+            }
+            'Namespace' {
+                # -is [string]
+                $result  = $Tinfo.Namespace
+                break
+            }
+            'ShortNamespace' {
+                $result = $Tinfo | Dotils.Format-ShortNamespace -MinCount 1
+                break
+            }
+            'ShortName' {
+                $result = $Tinfo | Dotils.Format-ShortType -MinNamespaceCrumbCount 1
+                break
+            }
+        }
+        $isBlank = [string]::IsNullOrWhiteSpace( $result )
+        if($isBlank -and $InputObject) {
+            'Object exists but the attribute is blank'
+                | Dotils.Write-DimText | Infa
+        }
+        return $result
+    }
+
+}
 function Picky.ScriptBlock.GetInfo {
     <#
     .SYNOPSIS
@@ -489,6 +581,8 @@ $w1.Crumbs | Should -BeExactly @('f', ' bar')
         'pk.Func*'
         'pk.fn*'
         'pk.Sb*'
+        'pk.Type*'
+        'pk.Tinfo*'
     }
 
     if( $ModuleConfig.ExportPrefix.String ) {
