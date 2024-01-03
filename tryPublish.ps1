@@ -30,8 +30,7 @@ function __Render.ParamAstNames {
 
 class BuildItCommandNameCompleter : IArgumentCompleter {
     # rename, it's more of a [FunctionDefinitionAst].Name Completer
-    [bool]$UseBatSyntaxHighlighting = $false
-    # auto complete functions in this file
+        # auto complete functions in this file
     [IEnumerable[CompletionResult]] CompleteArgument(
         [string] $CommandName,
         [string] $ParameterName,
@@ -39,11 +38,8 @@ class BuildItCommandNameCompleter : IArgumentCompleter {
         [Language.CommandAst] $CommandAst,
         [System.Collections.IDictionary] $FakeBoundParameters
     ) {
-
-
         $doc = Dotils.AstFromFile -FileName $PSCommandPath
-        [List[FunctionDefinitionAst]]$topLevelCommands = @( $doc.Ast.FindAll(
-            {
+        [List[FunctionDefinitionAst]]$topLevelCommands = @( $doc.Ast.FindAll({
                 param( [Ast]$Ast )
                 end {  $Ast -is [FunctionDefinitionAst] }
             }, $false)
@@ -92,12 +88,6 @@ class BuildItCommandNameCompleter : IArgumentCompleter {
                             | Join-String -op  $c.Fg
                             | Join-String -os $Str.Pad
                         $renderParams
-                        #
-                        # insert colors, one per line.
-                        # $renderParams -join "`n" -split '\r?\n' | %{
-                        #         $_ -split '\$', 2
-                        #             | Join-String -sep ('$' + $C.Var)
-                        #     } | Join-String -sep "`n"
 
                         $Str.Pad
                         'Notes: '
@@ -109,12 +99,10 @@ class BuildItCommandNameCompleter : IArgumentCompleter {
                         $Str.Pad
                         'Description: '
                             | Join-String -op $c.Header
-                            # | Join-String -os $Str.Pad
 
                         $curCmd.GetHelpContent().Description ?? "`u{2400}"
                             | Join-String -op  $c.Fg
-                        # ''
-                    ) | Join-String -sep '' # $Str.Pad
+                    ) | Join-String -sep ''
 
 
                     if( [string]::IsNullOrWhiteSpace( $Tooltip )) {
@@ -122,10 +110,10 @@ class BuildItCommandNameCompleter : IArgumentCompleter {
                     }
 
                    return  [CompletionResult]::new(
-                        <# completionText#> $curCmd.Name,
-                        <# listItemText #> $curCmd.Name,
+                        <# completionText#>       $curCmd.Name,
+                        <# listItemText #>        $curCmd.Name,
                         [CompletionResultType]::ParameterValue,
-                        <# tooltip #> $Tooltip
+                        <# tooltip #>                  $Tooltip
                     )
                 }
 
