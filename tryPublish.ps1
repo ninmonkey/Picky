@@ -201,18 +201,27 @@ function CleanUp-ModuleBuilder {
     remove-item -LiteralPath $newestPathTemplate -Recurse -Confirm
 }
 function CleanUp-InstallModule {
-     <#
+    <#
     .SYNOPSIS
-        Cleanup all folders created by 'BuildModule'
+        cleanup 'Install-MOdule's version of this module
     #>
     [CmdletBinding()]
     param(
         # Module name, else falls back to:  Env:BuildModuleName
         [string]$ModuleName
     )
-    throw 'NYI'
     if( -not $PSBoundParameters.ContainsKey('ModuleName') ) { $ModuleName = $Env:BuildModuleName }
     'ModuleName: {0}' -f $ModuleName | Write-verbose
+
+    Remove-Module "${ModuleName}*"
+    Uninstall-module $ModuleName -ea 'continue'
+
+    $NewestInstalledModule =
+        gci (Join-Path (Join-Path $env:USERPROFILE "SkyDrive\Documents\PowerShell\Modules") $ModuleName) "${ModuleName}.psm1" -Recurse
+            | Sort-Object LastWriteTime -Descending -top 1
+
+    $dirToRemove = gi (Join-Path (Join-Path $env:USERPROFILE "SkyDrive\Documents\PowerShell\Modules") 'picky')
+    remove-item -LiteralPath $dirToRemove -Recurse -Confirm
 }
 function BuildIt-ModuleBuilder {
     <#
