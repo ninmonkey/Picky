@@ -184,11 +184,21 @@ function CleanUp-ModuleBuilder {
     [CmdletBinding()]
     param(
         # Module name, else falls back to:  Env:BuildModuleName
-        [string]$ModuleName
+        [string]$ModuleName,
+        [switch]$NoConfirm
     )
-    throw 'NYI'
     if( -not $PSBoundParameters.ContainsKey('ModuleName') ) { $ModuleName = $Env:BuildModuleName }
     'ModuleName: {0}' -f $ModuleName | Write-verbose
+
+    $newestPathTemplate =
+        'H:\data\2023\pwsh\PsModules.Import\{0}' -f $ModuleName
+
+    'to remove: module-builder''s root: {0}' -f $NewestPathTemplate | write-verbose -verbose
+    if(-not (test-path $NewestPathTemplate)) {
+        'already empty or deleted' | write-verbose
+        return
+    }
+    remove-item -LiteralPath $newestPathTemplate -Recurse -Confirm
 }
 function CleanUp-InstallModule {
      <#
