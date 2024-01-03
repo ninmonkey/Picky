@@ -8,7 +8,7 @@ $App = Get-Content (Join-Path $PSScriptRoot './app.json' | gi -ea 'stop' ) | Con
 
 $PSDefaultParameterValues['BuildIt-*:verbose'] = $true
 
-
+write-warning 'left off: __Render.ParamAstNames $curCmd.Body.ParamBlock.Parameters completer for builditcmd'
 function __Render.ParamAstNames {
     param(
         [ParameterAst[]]$ParameterAst,
@@ -29,6 +29,8 @@ function __Render.ParamAstNames {
 
 
 class BuildItCommandNameCompleter : IArgumentCompleter {
+    # rename, it's more of a [FunctionDefinitionAst].Name Completer
+    [bool]$UseBatSyntaxHighlighting = $false
     # auto complete functions in this file
     [IEnumerable[CompletionResult]] CompleteArgument(
         [string] $CommandName,
@@ -38,20 +40,18 @@ class BuildItCommandNameCompleter : IArgumentCompleter {
         [System.Collections.IDictionary] $FakeBoundParameters
     ) {
 
+
         $doc = Dotils.AstFromFile -FileName $PSCommandPath
         [List[FunctionDefinitionAst]]$topLevelCommands = @( $doc.Ast.FindAll(
             {
                 param( [Ast]$Ast )
-                end {
-                        $t = $Ast -is [FunctionDefinitionAst]
-                        return $t
-                }
-            }, $false) #| % Name | Sort-Object -Unique
+                end {  $Ast -is [FunctionDefinitionAst] }
+            }, $false)
         )
 
         [List[CompletionResult]]$CompletionResults = @(
             $TopLevelCommands
-                | Sort-Object Name
+                | Sort-Object Name -Unique
                 | ?{
                     $_.Name -match [regex]::Escape( $WordToComplete )
                 } | %{
@@ -60,11 +60,18 @@ class BuildItCommandNameCompleter : IArgumentCompleter {
                         __Render.ParamAstNames $curCmd.Body.ParamBlock.Parameters
                         | Join-String -sep "`n"
 
-                    if( [string]$Tooltip.Length -eq '') {
-                        $Tooltip = "`u{2400}"
+                    if($this.UseBatSyntaxHighlighting) {
+                        # $PSStyle.OutputRendering = 'ansi'
+                        $Tooltip =
+                            ($tooltip -join "`n")| bat --color always --paging never -l ps1
+                            | Join-String -sep "`n"
+                            # $tooltip | Bat -f -l cs
                     }
 
-
+                    # if( [string]$Tooltip.Length -eq '') { # not good enough, does not catch null
+                    if( [string]::IsNullOrWhiteSpace( $Tooltip )) {
+                        $Tooltip = "`u{2400}"
+                    }
                    return  [CompletionResult]::new(
                         <# completionText#> $curCmd.Name,
                         <# listItemText #> $curCmd.Name,
