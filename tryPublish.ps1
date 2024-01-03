@@ -56,22 +56,71 @@ class BuildItCommandNameCompleter : IArgumentCompleter {
                     $_.Name -match [regex]::Escape( $WordToComplete )
                 } | %{
                     [FunctionDefinitionAst]$curCmd = $_
-                    [string]$Tooltip =
-                        __Render.ParamAstNames $curCmd.Body.ParamBlock.Parameters
-                        | Join-String -sep "`n"
+                    [string]$Tooltip = ''
 
-                    if($this.UseBatSyntaxHighlighting) {
-                        # $PSStyle.OutputRendering = 'ansi'
-                        $Tooltip =
-                            ($tooltip -join "`n")| bat --color always --paging never -l ps1
-                            | Join-String -sep "`n"
-                            # $tooltip | Bat -f -l cs
+                    # if($this.UseBatSyntaxHighlighting) {
+                    #     # not worth it unless it's cached
+                    #     # $PSStyle.OutputRendering = 'ansi'
+                    #     $Tooltip =
+                    #         ($tooltip -join "`n")| bat --color always --paging never -l ps1
+                    #         | Join-String -sep "`n"
+                    #         # $tooltip | Bat -f -l cs
+                    # }
+                    $c = @{
+                        Fg     = $PSStyle.Foreground.FromRgb('#b7dca8')
+                        Header = $PSStyle.Foreground.FromRgb('#57785f')
+                        Var    = $PSStyle.Foreground.FromRgb('#a0dcff')
+                    }
+                    $Str = @{
+                        Pad = "`n"
                     }
 
-                    # if( [string]$Tooltip.Length -eq '') { # not good enough, does not catch null
+                    [string]$tooltip = ''
+                    $tooltip += @(
+                        $Str.Pad
+                        'Synopsis: '
+                            | Join-String -op $c.Header
+
+                        $curCmd.GetHelpContent().Synopsis ?? "`u{2400}"
+                            | Join-String -op  $c.Fg
+                        "`n"
+                        'Params: '
+                            | Join-String -op $c.Header
+                            | Join-String -os $Str.Pad
+                        $Str.Pad
+                        [string]$renderParams = (__Render.ParamAstNames $curCmd.Body.ParamBlock.Parameters) ?? "`u{2400}"
+                            | Join-String -op  $c.Fg
+                            | Join-String -os $Str.Pad
+                        $renderParams
+                        #
+                        # insert colors, one per line.
+                        # $renderParams -join "`n" -split '\r?\n' | %{
+                        #         $_ -split '\$', 2
+                        #             | Join-String -sep ('$' + $C.Var)
+                        #     } | Join-String -sep "`n"
+
+                        $Str.Pad
+                        'Notes: '
+                            | Join-String -op $c.Header
+
+                        $curCmd.GetHelpContent().Notes ?? "`u{2400}"
+                            | Join-String -op  $c.Fg
+
+                        $Str.Pad
+                        'Description: '
+                            | Join-String -op $c.Header
+                            # | Join-String -os $Str.Pad
+
+                        $curCmd.GetHelpContent().Description ?? "`u{2400}"
+                            | Join-String -op  $c.Fg
+                        # ''
+                    ) | Join-String -sep '' # $Str.Pad
+
+
                     if( [string]::IsNullOrWhiteSpace( $Tooltip )) {
                         $Tooltip = "`u{2400}"
                     }
+
                    return  [CompletionResult]::new(
                         <# completionText#> $curCmd.Name,
                         <# listItemText #> $curCmd.Name,
