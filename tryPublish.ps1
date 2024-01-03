@@ -376,5 +376,21 @@ function ImportFrom-InstallModule {
 
     Import-Module @importModuleSplat
         | Join-string -op 'InstallModule: Import should not throw: '
-
 }
+
+@'
+to get started, try some commands:
+
+
+> BuildItCmd <autocompleter>
+> BuildIt-ModuleBuilder # invoke module-builder
+
+> Cleanup-ModuleBuilder # remove module-builder's outputs
+> Cleanup-InstallModule # removes installed instances
+
+> ImportFrom-ModuleBuilder  # imports version in module-builder's output path
+> ImportFrom-InstallModule  # imports version from install-module
+
+> BuildIt-Publish       # push package
+
+'@
