@@ -164,6 +164,63 @@ function Picky.Type.GetInfo {
     }
 
 }
+<#
+param(
+
+
+        # Appears to resolve what parameters will resolve using a partial match
+        # essentially: Name -like 'query*'
+        # case-insensitive. Blank strings throw errors
+        # also throws when value is ambigious
+        [Parameter()]
+        [String]$ResolveParameter
+    )
+
+#>
+function Picky.String.GetInfo {
+    [Alias(
+        'String.GetInfo',
+        'pk.String',
+        'pk.Str'
+    )]
+    [OutputType('String')]
+    param(
+        [Alias(
+            'InputObject', 'Text', 'In',
+            'InObj','InStr', 'Content', 'Line'
+        )]
+        [AllowNull()]
+        [AllowEmptyString()]
+        [AllowEmptyCollection()]
+        [Parameter( Mandatory, ParameterSetName='FromPipe',  ValueFromPipeline, ValueFromPipelineByPropertyName)]
+        [Parameter( Mandatory, ParameterSetName='FromParam', Position = 0 )]
+        [string]$InputText,
+
+        [ValidateScript({throw 'nyi'})]
+        [Parameter( ParameterSetName='FromPipe',  Position = 0 )]
+        [Parameter( ParameterSetName='FromParam', Position = 1 )]
+        [Parameter()]
+        [ValidateSet('Default')]
+        [string]$OutputKind
+    )
+    begin {}
+    process {
+        [string]$InStr = $InputText
+        [pscustomobject]@{
+            PSTypeName  = 'picky.String.InfoRecord'
+            IsBlank     = [string]::IsNullOrWhiteSpace( $InStr )
+            IsNullable  = [string]::IsNullOrEmpty( $InStr )
+            IsMultiLine = ($InStr -split '\r?\n').count -gt 1
+            # Original    = $InStr
+            Content     = $InStr | Join-String -sep ''
+            FirstLine   = $InStr -split '\r?\n' | Select -first 1
+            LengthChars = $InStr.Length
+            LengthRunes = @($InStr.EnumerateRunes()).Count
+            FormatCC    = $InStr | Format-ControlChar
+        }
+
+    }
+}
 function Picky.ScriptBlock.GetInfo {
     <#
     .SYNOPSIS

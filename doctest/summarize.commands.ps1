@@ -1,4 +1,5 @@
-﻿$modPath = Join-Path $PSScriptRoot '../Picky/Picky.psm1'
+﻿err -Clear
+$modPath = Join-Path $PSScriptRoot '../Picky/Picky.psm1'
 impo $modPath -force -PassThru | Join-String { $_.Name, $_.Version, $_.Path}
 
 impo nin.Ast -force -PassThru -ea 'stop'
@@ -7,9 +8,6 @@ impo nin.Ast -force -PassThru -ea 'stop'
 
 $astDoc = Dotils.Ast.GetAstFromFile -FileName $modPath
 $root = $astDoc.Ast
-
-$root.EndBlock.Statements.Left | ft -AutoSize
-
 $root.EndBlock.Statements.Left | ft -AutoSize
 
 @'
@@ -34,7 +32,7 @@ updateTypeDataSplat    False System.Object                                    $u
     ' | write-warning
 
 
-$root | Nin.Ast.FindIt AttributeAst
+$root | Nin.Ast.FindIt AttributeAst | Select -first 10
 |ft
 
 

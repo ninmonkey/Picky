@@ -12,6 +12,9 @@
 - Object::FromHash
 - Dictionary::NewSortedKeys
 
+- dotils
+- Dotils.Text.Matches, StartsWith, Etc.
+
 
 ### todo
 
