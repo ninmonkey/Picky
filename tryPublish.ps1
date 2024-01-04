@@ -236,6 +236,8 @@ function BuildIt-ModuleBuilder {
     if( -not $PSBoundParameters.ContainsKey('ModuleName') ) { $ModuleName = $Env:BuildModuleName }
     'ModuleName: {0}' -f $ModuleName | Write-verbose
 
+    Build-Module -Verbose
+
     $pathTemplate =
         'H:\data\2023\pwsh\PsModules\{0}\{0}\..\..\..\PsModules.import\{0}' -f @( $ModuleName )
 
@@ -334,8 +336,16 @@ function ImportFrom-ModuleBuilder {
     $newestBuildModule = gci $newestPathTemplate "${ModuleName}.psm1" -Recurse
         | Sort-Object LastWriteTime -Descending
 
-    Import-Module $NewestBuildModule -force -PassThru -ea 'stop'
-        | Join-string -op 'BuiltModule: Import should not throw: '
+    Join-String -op 'BuiltModule: Import should not throw: '
+    try {
+        Import-Module $NewestBuildModule -force -PassThru -ea 'stop'
+            | Join-string -p { $_.Name, $_.Version -join ': '; "`n"; $_.Path }
+    } catch {
+        'Import Failed!' | Write-host -fore 'red'
+        return $_
+    }
+    'No errors, deleting Module-Builder''s exported version...' | write-host -fore 'green'
+    CleanUp-ModuleBuilder
 }
 function ImportFrom-InstallModule {
     <#
