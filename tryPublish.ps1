@@ -281,7 +281,8 @@ function BuildIt-Publish {
         gci $PathTemplate | Sort-Object LastWriteTime -Descending -Top 1
 
     if( -not $NewestBuildRoot) {
-        write-warning 'Module not yet built, checked path {0}. Invoking build...' -f @( $PathBuildTemplate )
+        'Module not yet built, checked path {0}. Invoking build...' -f @( $PathBuildTemplate )
+        | write-warning
         BuildIt-ModuleBuilder
     }
     $newestBuildRoot =
@@ -289,8 +290,6 @@ function BuildIt-Publish {
     if( -not $NewestBuildRoot) {
         throw "Path failed after attempting to invoke BuildIt-ModuleBuilder! NewestBuildRoot: $NewestBuildRoot, PathTemplate: $PathTemplate"
     }
-
-
 
     $nugetExportRootPath = "g:\temp\lastPwshNuget-${ModuleName}"
     if( -not (Test-Path $nugetExportRootPath)) {
@@ -314,10 +313,15 @@ function BuildIt-Publish {
     }
 
     # [3]
-    Publish-PSResource @publishPSResourceSplat
+    Publish-PSResource @publishPSResourceSplat -ev 'publishErr'
 
     Get-Item $publishPSResourceSplat.DestinationPath
         | Join-String -op 'Output Nuget: ' | Write-Host -back 'darkgreen'
+
+    if($publishErr.count -eq 0) {
+        'No errors, removing module builder' | write-host -fore 'green'
+        Cleanup-Modulebuilder
+    }
 }
 
 function ImportFrom-ModuleBuilder {
