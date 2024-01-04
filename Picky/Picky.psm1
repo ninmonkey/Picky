@@ -110,6 +110,7 @@ function Picky.Type.GetInfo {
             'ShortNamespace'
         )]
         [string]$OutputKind = 'ShortName',
+        [int]$MinCrumbCount = 0,
         [switch]$PassThru
     )
     # future: assert properties exist
@@ -125,13 +126,20 @@ function Picky.Type.GetInfo {
         }
         if(! $tinfo) { throw "InvalidState: Tinfo wa snull"}
 
+        # this is to ensure namespace is never blank
+        # except system is always removed
+        $clampNamespaceMinCount = [Math]::Clamp( $MinCrumbCount, 1, 9999)
+
         $meta = [ordered]@{
+            ShortName      = $InputObject | Dotils.Format-ShortType -MinNamespaceCrumbCount $clampNamespaceMinCount # previously was: $MinCrumbCount
+            ShortNamespace = $InputObject | Dotils.Format-ShortNamespace -MinCount $MinCrumbCount
+            Name           = $tinfo.Name
+            Namespace      = $Tinfo.Namespace
             SourceObj      = $InputObject #?? "`u{2400}"
             Tinfo          = $tinfo #?? "`u{2400}"
-            Name           = $InputObject | Dotils.Format-ShortType
-            Namespace      = $InputObject | Dotils.Format-ShortNamespace
-            ShortName      = $InputObject | Dotils.Format-ShortType -MinNamespaceCrumbCount 1
-            ShortNamespace = $InputObject | Dotils.Format-ShortNamespace -MinCount 1
+            # HasGenericArgs = $Tinfo.isGeneric
+            # Name           = $InputObject | Dotils.Format-ShortType
+            # Namespace      = $InputObject | Dotils.Format-ShortNamespace -MinCount 1
         }
         if($PassThru) { return [pscustomobject]$Meta }
 
@@ -147,11 +155,11 @@ function Picky.Type.GetInfo {
                 break
             }
             'ShortNamespace' {
-                $result = $Tinfo | Dotils.Format-ShortNamespace -MinCount 1
+                $result = $Tinfo | Dotils.Format-ShortNamespace -MinCount $MinCrumbCount
                 break
             }
             'ShortName' {
-                $result = $Tinfo | Dotils.Format-ShortType -MinNamespaceCrumbCount 1
+                $result = $Tinfo | Dotils.Format-ShortType -MinNamespaceCrumbCount $MinCrumbCount
                 break
             }
         }
