@@ -277,14 +277,35 @@ function BuildIt-Publish {
     if( -not $PSBoundParameters.ContainsKey('ModuleName') ) { $ModuleName = $Env:BuildModuleName }
     'ModuleName: {0}' -f $ModuleName | Write-verbose
 
+    $newestBuildRoot =
+        gci $PathTemplate | Sort-Object LastWriteTime -Descending -Top 1
+
+    if( -not $NewestBuildRoot) {
+        write-warning 'Module not yet built, checked path {0}. Invoking build...' -f @( $PathBuildTemplate )
+        BuildIt-ModuleBuilder
+    }
+    $newestBuildRoot =
+        gci $PathTemplate | Sort-Object LastWriteTime -Descending -Top 1
+    if( -not $NewestBuildRoot) {
+        throw "Path failed after attempting to invoke BuildIt-ModuleBuilder! NewestBuildRoot: $NewestBuildRoot, PathTemplate: $PathTemplate"
+    }
+
+
+
+    $nugetExportRootPath = "g:\temp\lastPwshNuget-${ModuleName}"
+    if( -not (Test-Path $nugetExportRootPath)) {
+        mkdir -Path $nugetExportRootPath
+        'creating nugetRoot: {0}' -f $NugetExportRootPath  | write-host -fore 'blue'
+    }
+
     # remove old nugets
-    gci "g:\temp\lastPwshNuget-${ModuleName}" "${ModuleName}.*.nupkg"| Remove-Item
+    gci $nugetExportRootPath "${ModuleName}.*.nupkg"| Remove-Item
 
     # Publish-Module -Name "Picky" -NuGetApiKey $App.NugetApiKey -WhatIf
     $publishPSResourceSplat = @{
         ApiKey          = $App.NuGetApiKey
         Confirm         = $true
-        DestinationPath = "g:\temp\lastPwshNuget-${ModuleName}"
+        DestinationPath = $nugetExportRootPath
         Path            = $newestBuildRoot
         Repository      = 'PSGallery'
         Verbose         = $true
