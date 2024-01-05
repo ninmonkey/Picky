@@ -12,6 +12,10 @@
 - Object::FromHash
 - Dictionary::NewSortedKeys
 
+SelectProperty-ByRegex
+SelectProperty-ByBlankValue
+SelectStrings-ByMatch
+
 - dotils
 - Dotils.Text.Matches, StartsWith, Etc.
 
