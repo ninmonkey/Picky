@@ -1,7 +1,8 @@
 
 ### next queue
 
-
+- [ ] `[Globalization.CharUnicodeInfo]` | fime
+- [ ] [UnicodeCategory](https://learn.microsoft.com/en-us/dotnet/api/system.globalization.unicodecategory?view=net-8.0)
 - String.IsBlank
 - String.IsNullable
 - Object.Property.IsBlank, IsBasic, isNull, Exists
@@ -11,6 +12,11 @@
 - Dictionary::FromObject
 - Object::FromHash
 - Dictionary::NewSortedKeys
+- [TextInfo](https://learn.microsoft.com/en-us/dotnet/api/system.globalization.textinfo?view=net-8.0)
+- [ ] [StringInfo](https://learn.microsoft.com/en-us/dotnet/api/system.globalization.stringinfo?view=net-8.0)
+  - [ ] [ParseCombiningCharacters](https://learn.microsoft.com/en-us/dotnet/api/system.globalization.stringinfo.parsecombiningcharacters?view=net-8.0)
+  - [ ] [LengthInTextElements](https://learn.microsoft.com/en-us/dotnet/api/system.globalization.stringinfo.lengthintextelements?view=net-8.0)
+  - [ ] [Print which position a rune starts on, and what index range the `nth` rune starts on](https://learn.microsoft.com/en-us/dotnet/api/system.globalization.stringinfo?view=net-8.0#examples)
 
 SelectProperty-ByRegex
 SelectProperty-ByBlankValue
