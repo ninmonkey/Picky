@@ -197,6 +197,8 @@ function Picky.String.Test {
         https://unicode.org/reports/tr18/
     .LINK
         https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Regular_expressions/Unicode_character_class_escape
+    .link
+        https://learn.microsoft.com/en-us/dotnet/standard/base-types/character-classes-in-regular-expressions#word-character-w
     #>
     [Alias(
         # experimenting with alternate alias styles
@@ -230,15 +232,26 @@ function Picky.String.Test {
         [ValidateSet(
             'Blank',
             'Empty',
-            'TrueNull', 'TrueEmptyStr',
-            'ControlChars', 'Whitespace',
-            'Len', 'CodepointLen'
+            'TrueNull',
+            'TrueEmptyStr',
+            'ControlChars',
+            'Whitespace',   'Not.Whitespace',
+            'Len', 'CodepointLen',
+            'Invisible',
+            'Letter', 'NotLetter',
+            'Word', 'Not.Word',
+            'Surrogate', 'Not.Surrogate',
+            'Separator'
             # 'Nullable',
         )]
-        [Alias('Test', 'IsA?' 'Is?', 'If', 'Where', 'When')]
+        [Alias('Test', 'IsA?','Is?', 'If', 'Where', 'When')]
         [string[]]$TestKind
     )
     process {
+        write-warning 'does not pipe value, write tests'
+
+        'asdf' | Picky.Test-String -TestKind Blank | Should -be $false
+        throw 'nyi'
         $InObj             = $InputObject
         $IsTrueNull        = $null -eq $InObj
         $IsText            = $InObj -is [string]
@@ -247,30 +260,25 @@ function Picky.String.Test {
 
 
         switch($TestKind) {
-            'TrueNull' {
-                $IsTrueNull ; continue;
-            }
-            'TrueEmptyStr' {
-                $IsTrueEmptyString ; continue;
-            }
-            'Blank' {
-                [String]::IsNullOrWhiteSpace( $Text ) ; continue;
-            }
-            'Empty' {
-                [String]::IsNullOrEmpty( $Text ) ; continue;
-            }
-            'ControlChars' {
-                [String]::IsNullOrEmpty( $Text ) ; continue;
-            }
-            'Whitespace' {
-                [String]::IsNullOrEmpty( $Text ) ; continue;
-            }
-            'Len' {
-                $Text.Length ; continue;
-            }
-            'CodepointLen' {
-                @($Text.EnumerateRunes()).count ; continue;
-            }
+            'Word'          { $Text -match '^\w$' ; continue; }
+            'Not.Word'      { $Text -match '^\W$' ; continue; }
+            'Letter'        { $Text -match '^\p{L}$' ; continue; }
+            'Not.Letter'    { $Text -match '^\P{L}$' ; continue; }
+            'TrueNull'      { $IsTrueNull ; continue; }
+            'TrueEmptyStr'  { $IsTrueEmptyString ; continue; }
+            'Blank' { [String]::IsNullOrWhiteSpace( $Text ) ; continue; }
+            'Empty' { [String]::IsNullOrEmpty( $Text ) ; continue; }
+            'Surrogate'         { '\^p{Cs}$' ; continue; }
+            'Not.Surrogate'     { '\^P{Cs}$' ; continue; }
+            'ControlChar'       { '\^p{C}$' ; continue; }
+            'Not.ControlChar'   { '\^P{C}$' ; continue; }
+            'Whitespace'        { $Text -match '^\s$' ; continue; }
+            'Not.Whitespace'    { $Text -match '^\S$' ; continue; }
+            'Invisible'         { $Text -match '^\p{Z}$' ; continue; }
+            'Not.Invisible'     { $Text -match '^\P{Z}$' ; continue; }
+            'Separator'         { $Text -match '^\p{Z}$' ; continue; }
+            'Len'               { $Text.Length ; continue; }
+            'CodepointLen' { @($Text.EnumerateRunes()).count ; continue; }
             default { throw "UnhandledTestKind: $TestKind "}
         }
     }
