@@ -185,6 +185,96 @@ param(
     )
 
 #>
+function Picky.String.Test {
+    <#
+    .SYNOPSIS
+        Tests a string's attributes or states. a different function is used to filter strings conditionally Picky.String.Select
+    .LINK
+        Picky.String.SelectBy
+    .LINK
+        https://www.unicode.org/reports/tr44/#General_Category_Values
+    .LINK
+        https://unicode.org/reports/tr18/
+    .LINK
+        https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Regular_expressions/Unicode_character_class_escape
+    #>
+    [Alias(
+        # experimenting with alternate alias styles
+        'Picky.Test-String',
+        'Picky.String.Is',
+        'Picky.String?',
+        'String.Test',
+        'pk.String?',
+        'pk.Str?'
+    )]
+    [OutputType('String')]
+    param(
+        [Alias(
+            'InputObject', 'Text', 'In',
+            'InObj','InStr', 'Content', 'Line'
+        )]
+        [Parameter(
+            Mandatory, ParameterSetName='FromPipe',
+            ValueFromPipeline, ValueFromPipelineByPropertyName )]
+        [Parameter(
+            Mandatory, ParameterSetName='FromParam', Position = 0 )]
+            [AllowNull()]
+            [AllowEmptyString()]
+            [AllowEmptyCollection()]
+            [object]$InputText, # Potentially use $InputText as an object so that I can test object before coercion
+            # [string]$InputText,
+
+        [Parameter( ParameterSetName='FromPipe',  Position = 0 )]
+        [Parameter( ParameterSetName='FromParam', Position = 1 )]
+        [Parameter()]
+        [ValidateSet(
+            'Blank',
+            'Empty',
+            'TrueNull', 'TrueEmptyStr',
+            'ControlChars', 'Whitespace',
+            'Len', 'CodepointLen'
+            # 'Nullable',
+        )]
+        [Alias('Test', 'IsA?' 'Is?', 'If', 'Where', 'When')]
+        [string[]]$TestKind
+    )
+    process {
+        $InObj             = $InputObject
+        $IsTrueNull        = $null -eq $InObj
+        $IsText            = $InObj -is [string]
+        [string]$Text      = $InObj
+        $IsTrueEmptyString = $IsText -and $InObj.Length -eq 0
+
+
+        switch($TestKind) {
+            'TrueNull' {
+                $IsTrueNull ; continue;
+            }
+            'TrueEmptyStr' {
+                $IsTrueEmptyString ; continue;
+            }
+            'Blank' {
+                [String]::IsNullOrWhiteSpace( $Text ) ; continue;
+            }
+            'Empty' {
+                [String]::IsNullOrEmpty( $Text ) ; continue;
+            }
+            'ControlChars' {
+                [String]::IsNullOrEmpty( $Text ) ; continue;
+            }
+            'Whitespace' {
+                [String]::IsNullOrEmpty( $Text ) ; continue;
+            }
+            'Len' {
+                $Text.Length ; continue;
+            }
+            'CodepointLen' {
+                @($Text.EnumerateRunes()).count ; continue;
+            }
+            default { throw "UnhandledTestKind: $TestKind "}
+        }
+    }
+}
 function Picky.String.GetInfo {
     [Alias(
         'String.GetInfo',
