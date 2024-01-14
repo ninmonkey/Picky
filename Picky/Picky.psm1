@@ -185,6 +185,104 @@ param(
     )
 
 #>
+function Picky.String.EndsWith {
+    [CmdletBinding()]
+    [Alias(
+        'Picky.Str.EndsWith',
+        'pk.Str.EndsWith',
+        'Str.EndsWith'
+    )]
+    param(
+         [Parameter(Mandatory, ValueFromPipeline)]
+            [Alias('Str', 'Text', 'InStr', 'Content')]
+            [string] $InputText,
+
+        [Parameter()]
+            [string] $SubString,
+
+        [Parameter(
+            ParameterSetName = 'ParamStringCompareType' )]
+            [Alias('CompareType', 'Type')]
+            [System.StringComparison] $ComparisonType,
+
+        [Parameter(
+            ParameterSetName = 'ParamCaseSensitive')]
+            [Alias('AsCS', 'CS', 'CaseSensitive', 'UsingCS')]
+            [switch] $UsingCaseSensitive,
+
+        # this function only accepts culture when using ignoreCase version
+        [ArgumentCompletions(
+            "'en-us'", "'de-de'", '(Get-Culture ''es'')'
+        )]
+        [Parameter(
+            ParameterSetName = 'UsingCaseSensitive')]
+            [CultureInfo]$Culture = [CultureInfo]::InvariantCulture
+    )
+    process {
+        <#
+        implements all overloads cases:
+            EndsWith( str: value )
+            EndsWith( str: value, StringComparison: comparisonType )
+            EndsWith( str: value, bool: ignoreCase, CultureInfo: culture )
+            EndsWith( char value )
+        #>
+        if($PSBoundParameters.ContainsKey('ComparisonType')){
+            return $InputText.EndsWith(
+                <# values #> $SubString,
+                <# StringComparison #> $ComparisonType
+            )
+        }
+        if($PSBoundParameters.ContainsKey('Culture')){
+            return $InputText.EndsWith(
+                <# value      #> $SubString,
+                <# ignoreCase #> $UsingCaseSensitive,
+                <# Culture    #> $Culture
+            )
+        }
+        # neither chosen, so default to ignoreinvariant, optionally case sensitive
+        $ComparisonType = if($CaseSensitive) {
+            [StringComparison]::InvariantCulture
+        } else{
+            [StringComparison]::InvariantCultureIgnoreCase
+        }
+        return $InputText.EndsWith(
+            <# values #> $SubString,
+            <# StringComparison #> $ComparisonType
+        )
+    }
+
+}
+
+function Picky.String.Clamp {
+    <#
+    .SYNOPSIS
+        Truncate strings within limits, and without out-of-bounds errors
+    #>
+    [OutputType('String')]
+    [Alias(
+        'Picky.Str.Clamp',
+        'Str.Clamp',
+        'Pk.Str.Clamp'
+    )]
+    param(
+        # text to split
+        [string]$InputText = '',
+
+        # which position to end at. negative values are relative
+        # the end of the string
+        # used by SubString(0, RelPos) after safely clamping it
+        [int]$RelativePos
+    )
+    if($RelativePos -lt 0) {
+        $finalPos = $InputText.Length + $RelativePos
+    } else {
+        $finalPos = $RelativePos
+    }
+    # Clamp: 10, 0, 3 => 3
+    # 'abc'.Substring(0, 3) => 'abc'
+    $ClampedLen = [Math]::Clamp( $FinalPos, 0, $InputText.Length)
+    $InputText.Substring( <# startIndex: #> 0, <# length: #> $ClampedLen)
+}
 function Picky.String.Test {
     <#
     .SYNOPSIS
