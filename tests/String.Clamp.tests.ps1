@@ -20,6 +20,40 @@ AfterAll {
         | write-host -back 'darkyellow'
 }
 
+Describe 'Picky.String.EndsWith' {
+    it '<SubStr> in <Str> using <ComparisonType>' -ForEach @(
+        @{
+            In = 'foo.PS1'
+            SubStr = '.ps1'
+            ComparisonType = 'CurrentCulture'
+            Expect = $false
+        }
+        @{
+            In = 'foo.PS1'
+            SubStr = '.ps1'
+            ComparisonType = 'CurrentCultureIgnoreCase'
+            Expect = $true
+        }
+        # todo: parameterset needs tweaking to work when no ComparisonType is aet
+        @{
+            In = 'foo.PS1'
+            SubStr = '.ps1'
+            UsingCaseSensitive = $false
+            Expect = $true
+        }
+        @{
+            In = 'foo.PS1'
+            SubStr = '.ps1'
+            UsingCaseSensitive = $true
+            Expect = $false
+        }
+        # Picky.String.EndsWith -InputText 'foo.ps1' -SubString '.ps1' -ComparisonType CurrentCulture
+    ) {
+        Picky.String.EndsWith -in $In -SubString $SubStr -ComparisonType $ComparisonType
+            | Should -be $Expect
+    }
+}
+
 
 Describe 'Picky.String.Clamp' {
     It 'Clamp <In> <RelPos> is <ExpectExact>' -ForEach @(
