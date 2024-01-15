@@ -426,10 +426,10 @@ function Picky.String.GetInfo {
     }
 }
 class PropertyCompareRecord {
-    [Object]$Object
     [string]$PropertyName
     [string]$CompareKind
     [bool]$Result
+    [Object]$Object
 }
 
 function Picky.Test-Object {
@@ -452,7 +452,7 @@ function Picky.Test-Object {
         [Parameter(
             Position = 0
         )]
-        [object[]]$InputObject,
+        [object[]] $InputObject,
 
         # Do these properties exist on an object. testing existence, even if they are null
         [Parameter()]
@@ -462,17 +462,17 @@ function Picky.Test-Object {
 
         # propety does not even exist on the type/object
         [Alias('NotHasProp', 'NoProp', 'DoesNotExist', 'MissingProp', 'Missing', 'HasNone', 'NotExist')]
-        [string[]] $MissingPropery,
+        [string[]] $MissingProperty,
 
         [Parameter()]
         [Alias('NotEmpty', 'IsNotEmpty', 'IsNotBlank', 'NotIsBlank')]
-        [string[]]$NotBlank,
+        [string[]] $NotBlank,
 
         # does exist, but it's blankable # does this property exist, and it's blankable?
         # future: distinguish empty vs blank
         [Parameter()]
         [Alias('HasBlank', 'HasEmpty', 'Empty', 'IsEmpty', 'IsBlank', 'Blank')]
-        [string[]]$BlankProp
+        [string[]] $BlankProp
     )
     end {
         [List[PropertyCompareRecord]]$CmpSummary = @()

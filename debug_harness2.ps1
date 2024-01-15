@@ -17,7 +17,15 @@ Picky.Test-Object -PropertyName Name, Length, Missing -InputObject $testy|ft
 
 Picky.Test-Object -in $testy -PropertyName 'Blank', 'stuff', 'dsfdsf' -NotBlank 'Blank' -BlankProp 'Blank', 'stuff'
 hr
-Picky.Test-Object $testy -PropertyName 'Blank', 'Stuff' -NotBlank 'Blank', 'df' -MissingPropery 'cat', 'dog'
+$pkSplat = @{
+    PropertyName = 'Blank', 'Stuff'
+    NotBlank = 'Blank', 'df'
+    MissingProperty = 'cat', 'dog'
+    BlankProp = 'Blank', 'Stuff'
+    InputObject = $testy
+}
+
+Picky.Test-Object @pkSplat
 |ft
 h1 'early exit. refactor test.'
 return
