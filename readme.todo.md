@@ -1,3 +1,20 @@
+### naming note
+
+```sh
+To Filter or test, try
+    pk.obj? -has Prop1, Prop2
+To Assert, use
+    pk.Obj! -has Prop1, Prop2
+```
+
+### left off
+
+- this test is not hitting blank parameter
+```ps1
+Picky.Test-Object $o -PropertyName 'Blank', 'Stuff' -NotBlank 'Blank', 'df' -MissingPropery 'cat', 'dog'
+|ft
+```
+
 
 ### next queue
 

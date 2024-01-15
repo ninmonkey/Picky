@@ -425,6 +425,115 @@ function Picky.String.GetInfo {
 
     }
 }
+class PropertyCompareRecord {
+    [Object]$Object
+    [string]$PropertyName
+    [string]$CompareKind
+    [bool]$Result
+}
+
+function Picky.Test-Object {
+    <#
+    .SYNOPSIS
+    .NOTES
+    naming note:
+        To Filter or test, try
+            pk.obj? -has Prop1, Prop2
+        To Assert, use
+            pk.Obj! -has Prop1, Prop2
+    #>
+    [OutputType('PropertyCompareRecord', 'Boolean')]
+    [CmdletBinding()]
+    [Alias(
+        'pk.Test-Object',
+        'pk.Obj?'
+    )]
+    param(
+        [Parameter(
+            Position = 0
+        )]
+        [object[]]$InputObject,
+
+        # Do these properties exist on an object. testing existence, even if they are null
+        [Parameter()]
+        [Alias('HasProp', 'Exists', 'Has')]
+        [string[]] $PropertyName,
+        [Parameter()]
+
+        # propety does not even exist on the type/object
+        [Alias('NotHasProp', 'NoProp', 'DoesNotExist', 'MissingProp', 'Missing', 'HasNone', 'NotExist')]
+        [string[]] $MissingPropery,
+
+        [Parameter()]
+        [Alias('NotEmpty', 'IsNotEmpty', 'IsNotBlank', 'NotIsBlank')]
+        [string[]]$NotBlank,
+
+        # does exist, but it's blankable # does this property exist, and it's blankable?
+        # future: distinguish empty vs blank
+        [Parameter()]
+        [Alias('HasBlank', 'HasEmpty', 'Empty', 'IsEmpty', 'IsBlank', 'Blank')]
+        [string[]]$BlankProp
+    )
+    end {
+        [List[PropertyCompareRecord]]$CmpSummary = @()
+
+        foreach($Name in $PropertyName ){
+
+            [bool]$result = $InputObject.Properties.Name -contains $Name
+            $cmpSummary.Add(
+                [PropertyCompareRecord]@{
+                    Object       = $InputObject
+                    PropertyName = $Name
+                    CompareKind  = 'Exists' # 'PropertyExists'
+                    Result       = $result
+                })
+        }
+        foreach($Name in $MissingProperty ){
+
+            [bool]$result = $InputObject.Properties.Name -notcontains $Name
+            $cmpSummary.Add(
+                [PropertyCompareRecord]@{
+                    Object       = $InputObject
+                    PropertyName = $Name
+                    CompareKind  = 'Missing' # 'PropretyMissing'
+                    Result       = $result
+                })
+        }
+        foreach($Name in $BlankProp ){
+            [bool]$exists  = $InputObject.Properties.Name -Contains $Name
+            $curValue      = ($InputObject.psobject.properties)?[ $Name ].Value
+            [bool]$isBlank = [string]::IsNullOrWhiteSpace( $curValue )
+
+            [bool]$Result = $exists -and $IsBlank
+            $cmpSummary.Add(
+                [PropertyCompareRecord]@{
+                    Object       = $InputObject
+                    PropertyName = $Name
+                    CompareKind  = 'Blank' # 'PropertyBlank'
+                    Result       = $result
+                })
+        }
+        foreach($Name in $NotBlank ){
+            [bool]$exists     = $InputObject.Properties.Name -Contains $Name
+            $curValue         = ($InputObject.psobject.properties)?[ $Name ].Value
+            [bool]$isNotBlank = -not [string]::IsNullOrWhiteSpace( $curValue )
+
+            [bool]$Result = $exists -and $IsNotBlank
+            $cmpSummary.Add(
+                [PropertyCompareRecord]@{
+                    Object       = $InputObject
+                    PropertyName = $Name
+                    CompareKind  = 'NotBlank' #  'PropertyNotBlank'
+                    Result       = $result
+                })
+        }
+
+
+
+        return $cmpSummary
+    }
+}
+
 function Picky.ScriptBlock.GetInfo {
     <#
     .SYNOPSIS
