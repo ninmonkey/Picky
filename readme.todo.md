@@ -1,5 +1,8 @@
 ### naming note
 
+-- first:
+- remove all `Dotils.*`
+
 ```sh
 To Filter or test, try
     pk.obj? -has Prop1, Prop2

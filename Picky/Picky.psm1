@@ -20,6 +20,7 @@ $script:ModuleConfig = @{
     }
 }
 
+# function Picky.
 function Picky.GetCommands {
     # quick summary of commands
     # @{
@@ -124,7 +125,7 @@ function Picky.Type.GetInfo {
         } else {
             $tinfo = $InputObject.GetType()
         }
-        if(! $tinfo) { throw "InvalidState: Tinfo wa snull"}
+        if(! $tinfo) { throw "InvalidState: Tinfo was null!"}
 
         # this is to ensure namespace is never blank
         # except system is always removed
@@ -307,6 +308,7 @@ function Picky.String.Test {
         'pk.String?',
         'pk.Str?'
     )]
+    [CmdletBinding(DefaultParameterSetName='FromPipe')]
     [OutputType('String')]
     param(
         [Alias(
@@ -321,7 +323,7 @@ function Picky.String.Test {
             [AllowNull()]
             [AllowEmptyString()]
             [AllowEmptyCollection()]
-            [object]$InputText, # Potentially use $InputText as an object so that I can test object before coercion
+            [object] $InputText, # Potentially use $InputText as an object so that I can test object before coercion
             # [string]$InputText,
 
         [Parameter( ParameterSetName='FromPipe',  Position = 0 )]
@@ -343,13 +345,13 @@ function Picky.String.Test {
             # 'Nullable',
         )]
         [Alias('Test', 'IsA?','Is?', 'If', 'Where', 'When')]
-        [string[]]$TestKind
+        [string[]] $TestKind
     )
     process {
         write-warning 'does not pipe value, write tests'
 
-        'asdf' | Picky.Test-String -TestKind Blank | Should -be $false
-        throw 'nyi'
+        # 'asdf' | Picky.Test-String -TestKind Blank | Should -be $false
+        # throw 'nyi'
         $InObj             = $InputObject
         $IsTrueNull        = $null -eq $InObj
         $IsText            = $InObj -is [string]
@@ -366,10 +368,10 @@ function Picky.String.Test {
             'TrueEmptyStr'  { $IsTrueEmptyString ; continue; }
             'Blank' { [String]::IsNullOrWhiteSpace( $Text ) ; continue; }
             'Empty' { [String]::IsNullOrEmpty( $Text ) ; continue; }
-            'Surrogate'         { '\^p{Cs}$' ; continue; }
-            'Not.Surrogate'     { '\^P{Cs}$' ; continue; }
-            'ControlChar'       { '\^p{C}$' ; continue; }
-            'Not.ControlChar'   { '\^P{C}$' ; continue; }
+            'Surrogate'         { $text -match '\^p{Cs}$' ; continue; }
+            'Not.Surrogate'     { $text -match '\^P{Cs}$' ; continue; }
+            'ControlChar'       { $text -match '\^p{C}$' ; continue; }
+            'Not.ControlChar'   { $text -match '\^P{C}$' ; continue; }
             'Whitespace'        { $Text -match '^\s$' ; continue; }
             'Not.Whitespace'    { $Text -match '^\S$' ; continue; }
             'Invisible'         { $Text -match '^\p{Z}$' ; continue; }

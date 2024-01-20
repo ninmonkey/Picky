@@ -28,6 +28,22 @@ $pkSplat = @{
 Picky.Test-Object @pkSplat
 |ft
 h1 'early exit. refactor test.'
+
+
+
+
+# find-blank
+function FindBlank { process {
+    if( [string]::IsNullOrWhiteSpace( $_.Verb  ) ) {
+        $_
+    }
+}}
+
+# function Picky.Coalesce {
+
+# }
+# $blanky | one 21 | FindBlank
+$blanky | one 21 | FindBlank | ft Verb, *
 return
 
 
