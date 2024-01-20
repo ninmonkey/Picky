@@ -73,6 +73,118 @@ if($ModuleConfig.TemplateFromCacheMe) {
             WriteBg $ColorBg ) -join ''
     }
 }
+function Picky.Find-Member {
+    <#
+    .SYNOPSIS
+        This filters members. it does not filter objects. filtering objects is Picky.Find-Object /
+        -Member/Picky.Find-Object
+
+
+    #>
+    # [OutputType('memberset class')]
+    param()
+    throw 'NYI, see Picky.Where-Object'
+}
+function Picky.Where-Object {
+    <#
+    .SYNOPSIS
+        This filters objects based on their members. it does not filter properies. filtering properties is Picky.Find-Member/Picky.Find-Object
+
+    #>
+    [Alias(
+        # # experimenting with alternate alias styles
+        # # pk.WhereMember is a command that uses this command, or is itself it?
+        # 'Picky.FindMember',
+        # 'Picky.Member.Is',
+        # 'Picky.String?',
+        # 'String.Test',
+        # 'pk.String?',
+        # 'pk.Str?'
+    )]
+    [OutputType('Object')]
+    [CmdletBinding(DefaultParameterSetName='FromPipe')]
+    [Alias(
+        'pk.Where-Object',
+        'pk.Where-Member',
+        'pk.Test-Object',
+        'pk.?Obj',
+        'pk-?',
+        'pk.WhereObj?',
+        'pk.?WhereObj',
+        'pk?Obj',
+        'pk.Obj?'
+    )]
+    param(
+        [Parameter(
+            Mandatory, ParameterSetName='FromPipe',
+            ValueFromPipeline, ValueFromPipelineByPropertyName )]
+        [Parameter(
+            Mandatory, ParameterSetName='FromParam', Position = 0 )]
+            [AllowNull()]
+            [AllowEmptyString()]
+            [AllowEmptyCollection()]
+        [object[]] $InputObject,
+
+        # Do these properties exist on an object. testing existence, even if they are null
+        # [Parameter( ParameterSetName='FromPipe',  Position = 0 )]
+        # [Parameter( ParameterSetName='FromParam', Position = 1 )]
+        [Alias(
+            'HasProp', 'Exists', 'Has')]
+        [Parameter()]
+        [string[]] $PropertyName,
+
+        # propety does not even exist on the type/object
+        [Alias(
+            'NotHasProp', 'NoProp', 'DoesNotExist', 'MissingProp',
+            'Missing', 'HasNone', 'NotExist')]
+        [string[]] $MissingProperty,
+
+        [Alias(
+            'NotEmpty', 'IsNotEmpty', 'IsNotBlank', 'NotIsBlank')]
+        [Parameter()]
+        [string[]] $NotBlank,
+
+        # does exist, but it's blankable # does this property exist, and it's blankable?
+        # future: distinguish empty vs blank
+        [Parameter()]
+        [Alias(
+            'HasBlank', 'HasEmpty', 'Empty', 'IsEmpty', 'IsBlank', 'Blank')]
+        [string[]] $BlankProp
+    )
+    process {
+        $tests = foreach( $CurObj in $InputObject ) {
+            $InObj = $InputObject
+            $toKeep = $false
+
+            $outerTests = @(
+                if($PSBoundParameters.ContainsKey('PropertyName')) {
+                    $toKeep = Picky.Test-Object -in $CurObj -PropertyName $PropertyName
+                    $toKeep
+                    break
+                }
+                if($PSBoundParameters.ContainsKey('MissingProperty')) {
+                    $toKeep = Picky.Test-Object -in $CurObj -MissingProperty $MissingProperty
+                    $toKeep
+                    break
+                }
+                if($PSBoundParameters.ContainsKey('NotBlank')) {
+                    $toKeep = Picky.Test-Object -in $CurObj -NotBlank $NotBlank
+                    $toKeep
+                    break
+                }
+                if($PSBoundParameters.ContainsKey('BlankProp')) {
+                    $toKeep = Picky.Test-Object -in $CurObj -BlankProp $BlankProp
+                    $toKeep
+                    break
+                }
+            ).Where({ $true -eq $_ }, 'first')
+
+            if ($Tests.Count -gt 0) { $Tests } else { $false }
+            continue
+        }
+
+    }
+}
 function Picky.Type.GetInfo {
         <#
     .SYNOPSIS
@@ -103,7 +215,6 @@ function Picky.Type.GetInfo {
 
         [Parameter( ParameterSetName='FromPipe',  Position = 0 )]
         [Parameter( ParameterSetName='FromParam', Position = 1 )]
-        [Parameter()]
         [ValidateSet(
             'Name',
             'Namespace',
@@ -328,7 +439,6 @@ function Picky.String.Test {
 
         [Parameter( ParameterSetName='FromPipe',  Position = 0 )]
         [Parameter( ParameterSetName='FromParam', Position = 1 )]
-        [Parameter()]
         [ValidateSet(
             'Blank',
             'Empty',
@@ -348,10 +458,6 @@ function Picky.String.Test {
         [string[]] $TestKind
     )
     process {
-        write-warning 'does not pipe value, write tests'
-
-        # 'asdf' | Picky.Test-String -TestKind Blank | Should -be $false
-        # throw 'nyi'
         $InObj             = $InputObject
         $IsTrueNull        = $null -eq $InObj
         $IsText            = $InObj -is [string]
@@ -448,7 +554,7 @@ function Picky.Test-Object {
     [CmdletBinding()]
     [Alias(
         'pk.Test-Object',
-        'pk.Obj?'
+        'pk.Obj'
     )]
     param(
         [Parameter(

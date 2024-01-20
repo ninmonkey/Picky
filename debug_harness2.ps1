@@ -30,20 +30,67 @@ Picky.Test-Object @pkSplat
 h1 'early exit. refactor test.'
 
 
+function Pk.TestBools {
+    [Alias(
+        'Pk.AnyTrue',
+        'Pk.AnyFalse',
+        'Pk.AnyNull',
+
+        'Pk.FirstTrue',
+        'Pk.FirstFalse',
+        'Pk.FirstNull',
+
+        'Pk.AllTrue',
+        'Pk.AllFalse',
+        'Pk.AllNull'
+    )]
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory, ValueFromPipeline)]
+        [AllowEmptyCollection()]
+        [AllowEmptyString()]
+        [AllowNull()]
+        [object[]] $InputObject
+    )
+    begin {
+        $AliasName   = $MyInvocation.InvocationName
+        $CompareMode = $AliasName
+        [List[Object]] $Items = @()
+    }
+    process {
+        $Items.AddRange( @( $InputObject ))
+        $AliasName | Join-String -op 'Alias: ' | Dotils.Write-DimText | Write-verbose -verbose
+    }
+    end {
+        switch( $CompareMode ) {
+            default { throw "Uhandled compare mode: $CompareMode !"}
+        }
+
+    }
+}
 
 
+Pk.AnyTrue -InputObject @( $false, $true ) | SHould -be $True
+Pk.AllTrue -InputObject @( $false, $true ) | SHould -be $false
 # find-blank
 function FindBlank { process {
-    if( [string]::IsNullOrWhiteSpace( $_.Verb  ) ) {
-        $_
-    }
+    if( Picky.String.Test -In $_ Blank ) { $_ }
+
+    # if( [string]::IsNullOrWhiteSpace( $_.Verb  ) ) {
+    #     $_
+    # }
 }}
 
 # function Picky.Coalesce {
 
 # }
+$blanky = gcm  | Group { [string]::IsNullOrWhiteSpace( $_.Source ) } | ? Name  -eq $true | % Group
 # $blanky | one 21 | FindBlank
 $blanky | one 21 | FindBlank | ft Verb, *
+
+h1 'try new filter'
+
+$blanky[0] | Picky.Where-Object -BlankProp Source
 return
 
 
