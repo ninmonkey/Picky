@@ -1,5 +1,8 @@
 ﻿BeforeAll {
-    Get-module picky -All| CountOf | Remove-module
+    $Config = @{
+        SuperVerbose = $false
+    }
+    Get-module picky -All| Remove-module
     $ModPath =
         Join-Path $PSScriptRoot '../Picky/Picky.psm1'
         # $PSCommandPath -replace '\.tests.ps1$', '.psm1'
@@ -11,7 +14,9 @@
         | write-host -bg 'darkyellow'
     $PSStyle.OutputRendering = 'ansi'
 
-    $PSDefaultParameterValues['Pk.TestBools:Verbose'] = $True
+    if($Config.SuperVerbose) {
+        $PSDefaultParameterValues['Pk.TestBools:Verbose'] = $True
+    }
 }
 AfterAll {
     $PSDefaultParameterValues.Remove('Pk.TestBools:Verbose')
@@ -20,7 +25,7 @@ AfterAll {
         $Error.Count
         $Error.Count - $ErrCountStart
     )
-        | write-host -back 'darkwyellow'
+        | write-host -back 'darkyellow'
 }
 
 Describe 'Picky.TestBools : All Aliases are Implemented'  -Skip -tag 'waiting on implementation question' {
@@ -33,7 +38,7 @@ Describe 'Picky.TestBools : All Aliases are Implemented'  -Skip -tag 'waiting on
             # @(Nin.Ast.FromGcm.GetCommandAliases -CommandName Picky.TestBools).ForEach({ Get-Command $_ })
 
     }
-    Context 'Mode: <ModeName>' -ForEach @(
+    Context -skip 'Mode: <ModeName>' -ForEach @(
         @{ ModeName = 'AsPipeline' }
         @{ ModeName = 'AsParameter' }
     ) -Tag @('Alias.IsImplemented') {
@@ -47,25 +52,70 @@ Describe 'Picky.TestBools : All Aliases are Implemented'  -Skip -tag 'waiting on
                     { & ($WhichAlias) -in $data } | Should -not -throw
                 }
                 'AsPipeline' {
-                    $data | Pk.SomeTrue | Should -be $Expected
+                    $data | Pk.AnyTrue | Should -be $Expected
                 }
                 default { throw "UnhandledMode: $WhichMode"}
             }
         }
     }
 }
-Describe 'Picky.TestBools Cases'  {
+Describe 'Picky.TestBools Hardcoded Cases'  {
     BeforeAll {
         $Samples           = [ordered]@{}
         $Samples.Mixed     = @( $false, $true, $true, $null, '', ' ')
+
         $Samples.SomeTrue  = @( $false, $true, $true, $null, '', ' ')
+        $Samples.OnlyTrue =  @( $true, $true )
+        $Samples.NoneTrue =  @( $false, '', '  ' )
+
         $Samples.SomeFalse = @( $false, $true, $true, $null, '', ' ')
+        $Samples.OnlyFalse =  @( $false, $false )
+        $Samples.NoneFalse =  @( $true, ' ' )
+
         $Samples.SomeNull  = @( $false, $true, $true, $null, '', ' ')
+        $Samples.OnlyNull  = @( $Null, $Null )
+        $Samples.NoneNull  = @( 0, '', $false, ' ' )
+
         $Samples.SomeBlank = @( $false, $true, $true, $null, '', ' ')
+        $Samples.OnlyBlank = @( ' ', '' )
+
+        $Samples.EmptyList      = @()
+        $Samples.ScalarNull     = $Null
+        $Samples.ScalarTrue     = $True
+        $Samples.ScalarFalse    = $false
+        $Samples.ScalarBlank    = ''
+        $Samples.ScalarEmptyStr = [string]::Empty
     }
-    Context 'Mode: <_>' -ForEach @(
+    Context 'HardCodedInvokes: <_>' -Tag 'StaticTest', 'HardCoded' -ForEach @(
         'AsPipeline', 'AsParameter'
-    ) -Tag @() {
+    ) {
+        BeforeEach {
+            $WhichMode = $_
+        }
+        It 'Picky.AllTrue' {
+            # $whichMode = $_
+            switch( $WhichMode ) {
+                'AsParameter' {
+                    Picky.AnyTrue -in $Samples.SomeTrue  | Should -be $true
+                    Picky.AnyTrue -in $Samples.OnlyTrue  | Should -be $true
+                    Picky.AnyTrue -in $Samples.NoneTrue  | Should -be $false
+                    Picky.AnyTrue -in $Samples.EmptyList | Should -be $false
+                }
+                'AsPipeline' {
+                    $Samples.SomeTrue  | Picky.AnyTrue | Should -be $true
+                    $Samples.OnlyTrue  | Picky.AnyTrue | Should -be $true
+                    $Samples.NoneTrue  | Picky.AnyTrue | Should -be $false
+                    $Samples.EmptyList | Picky.AnyTrue | Should -be $false
+                }
+                default { throw "UnhandledMode: $WhichMode"}
+            }
+        }
+
+    }
+    Context -skip 'Mode: <_>' -ForEach @(
+        'AsPipeline', 'AsParameter'
+    ) -Tag @('skip some tests until alias invoke is resolved')  {
+        # or pester mode will throw 'UnhandledMode: System.Collections.Hashtable'
         it '<_> : <name> is <expected>' -ForEach @(
             @{
                 Name = 'SomeTrue'

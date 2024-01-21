@@ -44,6 +44,9 @@ function Picky.TestBools {
             Null,  NotNull
             Blank, NotBlank
 
+    .NOTES
+        Naming wise, SomeTrue vs AnyTrue ?
+
     #>
     [OutputType('bool')]
     [Alias(
@@ -74,7 +77,36 @@ function Picky.TestBools {
         'Pk.NoneNull',
         'Pk.NoneNotNull',
         'Pk.NoneBlank',
-        'Pk.NoneNotBlank'
+        'Pk.NoneNotBlank',
+
+        # 'Picky.TestBools', # base alias for consistency but not used
+        'Picky.AnyTrue',
+        'Picky.AnyFalse',
+        'Picky.AnyNull',
+        'Picky.AnyNotNull',
+        'Picky.AnyBlank',
+        'Picky.AnyNotBlank',
+
+        'Picky.FirstTrue',
+        'Picky.FirstFalse',
+        'Picky.FirstNull',
+        'Picky.FirstNotNull',
+        'Picky.FirstBlank',
+        'Picky.FirstNotBlank',
+
+        'Picky.AllTrue',
+        'Picky.AllFalse',
+        'Picky.AllNull',
+        'Picky.AllNotNull',
+        'Picky.AllBlank',
+        'Picky.AllNotBlank',
+
+        'Picky.NoneTrue',
+        'Picky.NoneFalse',
+        'Picky.NoneNull',
+        'Picky.NoneNotNull',
+        'Picky.NoneBlank',
+        'Picky.NoneNotBlank'
     )]
     [CmdletBinding()]
     param(

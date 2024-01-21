@@ -31,6 +31,9 @@ h1 'early exit. refactor test.'
 
 
 
+$targetCmd = gcm Picky.TestBools
+
+
 
 $PSDefaultParameterValues['Pk.TestBools:Verbose'] = $True
 Pk.AnyTrue -InputObject @( $false, $true ) | SHould -be $True
