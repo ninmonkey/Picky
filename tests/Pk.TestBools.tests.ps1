@@ -2,25 +2,24 @@
     $Config = @{
         SuperVerbose = $false
     }
+    $PSStyle.OutputRendering = 'ansi'  # because extension turns it off
     Get-module picky -All| Remove-module
     $ModPath =
         Join-Path $PSScriptRoot '../Picky/Picky.psm1'
         # $PSCommandPath -replace '\.tests.ps1$', '.psm1'
     Import-Module -Force -PassThru $ModPath
-       | Join-String -Prop { $_.Name, $_.Version -join ': ' }| out-host
+       | Join-String -Prop { $_.Name, $_.Version -join ': ' } | write-host
     $ErrCountStart = $Error.Count
-    $Error.Count
-        | Join-String -f 'ErrCountStart: {0}'
-        | write-host -bg 'darkyellow'
-    $PSStyle.OutputRendering = 'ansi'
-
     if($Config.SuperVerbose) {
+        $Error.Count
+            | Join-String -f 'ErrCountStart: {0}'
+            | write-host -bg 'darkyellow'
         $PSDefaultParameterValues['Pk.TestBools:Verbose'] = $True
     }
 }
 AfterAll {
     $PSDefaultParameterValues.Remove('Pk.TestBools:Verbose')
-    $PSStyle.OutputRendering = 'ansi'
+    $PSStyle.OutputRendering = 'ansi'  # because extension turns it off
     'ErrCountEnd: {0} [ +{1} ]' -f @(
         $Error.Count
         $Error.Count - $ErrCountStart
@@ -28,37 +27,37 @@ AfterAll {
         | write-host -back 'darkyellow'
 }
 
-Describe 'Picky.TestBools : All Aliases are Implemented'  -Skip -tag 'waiting on implementation question' {
-    BeforeAll {
-        $All_Command_AliasNames = @(
-            Nin.Ast.FromGcm.GetCommandAliases -CommandName 'Picky.TestBools'
-        )
-        $All_AliasNames_AsCmdInfo =
-            ( Get-Command Picky.TestBools ).ScriptBlock.Attributes.Where({$_ -is [Alias]}).AliasNames.forEach({gcm $_})
-            # @(Nin.Ast.FromGcm.GetCommandAliases -CommandName Picky.TestBools).ForEach({ Get-Command $_ })
+# Describe 'Picky.TestBools : All Aliases are Implemented'  -Skip -tag 'waiting on implementation question' {
+#     BeforeAll {
+#         $All_Command_AliasNames = @(
+#             Nin.Ast.FromGcm.GetCommandAliases -CommandName 'Picky.TestBools'
+#         )
+#         $All_AliasNames_AsCmdInfo =
+#             ( Get-Command Picky.TestBools ).ScriptBlock.Attributes.Where({$_ -is [Alias]}).AliasNames.forEach({gcm $_})
+#             # Nin.Ast.FromGcm.GetCommandAliases -CommandName Picky.TestBools -PassThru
 
-    }
-    Context -skip 'Mode: <ModeName>' -ForEach @(
-        @{ ModeName = 'AsPipeline' }
-        @{ ModeName = 'AsParameter' }
-    ) -Tag @('Alias.IsImplemented') {
-        it '<_> : <name> does not throw' -ForEach @(
-            @( $All_AliasNames_AsCmdInfo )
-        ) {
-            $whichAlias = $_
-            $data = $true, $false
-            switch( $ModeName ) {
-                'AsParameter' {
-                    { & ($WhichAlias) -in $data } | Should -not -throw
-                }
-                'AsPipeline' {
-                    $data | Pk.AnyTrue | Should -be $Expected
-                }
-                default { throw "UnhandledMode: $WhichMode"}
-            }
-        }
-    }
-}
+#     }
+#     Context -skip 'Mode: <ModeName>' -ForEach @(
+#         @{ ModeName = 'AsPipeline' }
+#         @{ ModeName = 'AsParameter' }
+#     ) -Tag @('Alias.IsImplemented') {
+#         it '<_> : <name> does not throw' -ForEach @(
+#             @( $All_AliasNames_AsCmdInfo )
+#         ) {
+#             $whichAlias = $_
+#             $data = $true, $false
+#             switch( $ModeName ) {
+#                 'AsParameter' {
+#                     { & ($WhichAlias) -in $data } | Should -not -throw
+#                 }
+#                 'AsPipeline' {
+#                     $data | Pk.AnyTrue | Should -be $Expected
+#                 }
+#                 default { throw "UnhandledMode: $WhichMode"}
+#             }
+#         }
+#     }
+# }
 Describe 'Picky.TestBools Hardcoded Cases'  {
     BeforeAll {
         $Samples           = [ordered]@{}
@@ -86,6 +85,46 @@ Describe 'Picky.TestBools Hardcoded Cases'  {
         $Samples.ScalarBlank    = ''
         $Samples.ScalarEmptyStr = [string]::Empty
     }
+        # or pester mode will throw 'UnhandledMode: System.Collections.Hashtable'
+    Context 'AnyTrue: <Label> is <Expect>' -tag '🐒' -ForEach @(
+        @{
+            In = $Samples.SomeTrue
+            Expect = $true
+            Label = 0
+        }
+        @{
+            In = $Samples.OnlyTrue
+            Expect = $true
+            Label = 1
+        }
+        @{
+            In = $Samples.NoneTrue
+            Expect = $false
+            Label = 2
+        }
+        @{
+            In = $Samples.EmptyList
+            Expect = $false
+            Label = 3
+        }
+    ) {
+        it 'Mode: <_>' -ForEach @(
+            'AsPipeline', 'AsParameter'
+        ) {
+            $whichMode = $_
+            switch( $whichMode ) {
+                'AsParameter' {
+                    Picky.AnyTrue -in $In | SHould -be $Expect
+                }
+                'AsPipeline' {
+                    $In | Picky.AnyTrue | SHould -be $Expect
+                }
+            }
+        }
+    }
+}
+
+
     # Context 'HardCodedInvokes: <_>' -Tag 'StaticTest', 'HardCoded' -ForEach @(
     #     'AsPipeline', 'AsParameter'
     # ) {
@@ -108,43 +147,3 @@ Describe 'Picky.TestBools Hardcoded Cases'  {
     #         }
     #     }
     # }
-
-        # or pester mode will throw 'UnhandledMode: System.Collections.Hashtable'
-    Context 'AnyTrue: <Label> is <Expect>' -tag '🐒' -ForEach @(
-        @{
-            In = $Samples.SomeTrue
-            Expect = $true
-            Label = 0
-        }
-        @{
-            In = $Samples.OnlyTrue
-            Expect = $true
-            Label = 1
-        }
-        @{
-            In = $Samples.NoneTrue
-            Expect = $false
-            Label = 2
-        }
-        @{
-            In = $Samples.EmptyList
-            Expect = $true
-            Label = 3
-        }
-    ) {
-        it 'Mode: <_>' -ForEach @(
-            'AsPipeline', 'AsParameter'
-        ) {
-            $whichMode = $_
-            switch( $whichMode ) {
-                'AsParameter' {
-                    Picky.AnyTrue -in $In | SHould -be $Expect
-
-                }
-                'AsPipeline' {
-                    $In | Picky.AnyTrue | SHould -be $Expect
-                }
-            }
-        }
-    }
-}

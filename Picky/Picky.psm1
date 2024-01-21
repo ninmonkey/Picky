@@ -20,6 +20,41 @@ $script:ModuleConfig = @{
     }
 }
 
+function util.Write-DimText {
+    <#
+    .SYNOPSIS
+        # sugar for dim gray text,
+    .EXAMPLE
+        # pipes to 'less', nothing to console on close
+        get-date | util.Write-DimText | less
+
+        # nothing pipes to 'less', text to console
+        get-date | util.Write-DimText -PSHost | less
+    .EXAMPLE
+        > gci -Name | util.Write-DimText |  Join.UL
+        > 'a'..'e' | util.Write-DimText  |  Join.UL
+    #>
+    [OutputType('String')]
+    # [Alias('util.Write-DimText')]
+    param(
+        # write host explicitly
+        [switch]$PSHost
+    )
+    $ColorDefault = @{
+        ForegroundColor = 'gray60'
+        BackgroundColor = 'gray20'
+    }
+
+    if($PSHost) {
+        return $Input
+            | Pansies\write-host @colorDefault
+    }
+
+    return $Input
+        | New-Text @colorDefault
+        | % ToString
+}
+
 # function Picky.
 function Picky.GetCommands {
     # quick summary of commands
@@ -133,7 +168,7 @@ function Picky.TestBools {
     }
     process {
         $tests.AddRange( @( $InputObject ))
-        $CompareMode | Join-String -op 'Alias: ' | Dotils.Write-DimText | Write-verbose
+        $CompareMode | Join-String -op 'Alias: ' | util.Write-DimText | Write-verbose
     }
     end {
         $full_list = $Tests
@@ -421,7 +456,7 @@ function Picky.Type.GetInfo {
         $isBlank = [string]::IsNullOrWhiteSpace( $result )
         if($isBlank -and $InputObject) {
             'Object exists but the attribute is blank'
-                | Dotils.Write-DimText | Infa
+                | util.Write-DimText | util.Write-Information
         }
         return $result
     }
@@ -852,7 +887,7 @@ function Picky.ScriptBlock.GetInfo {
             'Expected A <ScriptBlock | ... >. Actual: {0}' -f @(
                 $InputObject.GetType().Name
             )
-            | Dotils.Write-DimText | Infa
+            | util.Write-DimText | Infa
                 # | write-warning
         }
         'InputType: {0}, Expected <ScriptBlock>' -f @(
@@ -920,7 +955,7 @@ function Picky.ScriptBlock.GetInfo {
         $isBlank = [string]::IsNullOrWhiteSpace( $result )
         if($isBlank -and $InputObject) {
             'Object exists but the attribute is blank'
-                | Dotils.Write-DimText | Infa
+                | util.Write-DimText | Infa
         }
         return $result
 
@@ -1003,7 +1038,7 @@ function Picky.Function.GetInfo {
             'Expected A <CommandInfo | FunctionInfo>. Actual: {0}' -f @(
                 $InputObject.GetType().Name
             )
-            | Dotils.Write-DimText | Infa
+            | util.Write-DimText | Infa
                 # | write-warning
         }
         'InputType: {0}, Expected <CommandInfo|FunctionInfo>' -f @(
@@ -1050,7 +1085,7 @@ function Picky.Function.GetInfo {
         $isBlank = [string]::IsNullOrWhiteSpace( $result )
         if($isBlank -and $InputObject) {
             'Object exists but the attribute is blank'
-                | Dotils.Write-DimText | Infa
+                | util.Write-DimText | Infa
         }
         return $result
 
@@ -1095,6 +1130,29 @@ function Picky.String.GetCrumbs {
     )
     [WordCrumb]::new( $InputText, $SplitBy )
 }
+
+
+function util.Write-Information {
+    <#
+    .SYNOPSIS
+        sugar for : obj | Write-information -infa 'continue'
+    #>
+    [Alias(
+        'util.Infa'
+    )]
+    param(
+        [switch]$WithoutInfaContinue
+    )
+    if($WithoutInfaContinue) {
+        $Input | Write-Information
+        return
+    }
+    $Input | Write-Information -infa 'continue'
+}
+
+
+### bottom before classes
+
 class WordCrumb {
     <#
     .DESCRIPTION
