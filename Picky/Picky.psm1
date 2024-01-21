@@ -31,6 +31,104 @@ function Picky.GetCommands {
     # }
 }
 
+function Picky.TestBools {
+    <#
+    .SYNOPSIS
+        Check if a bunch of bools are all true, or any true, or none true, or all null, or all blank, etc...
+    .DESCRIPTION
+        There are 4 main conditions
+            All, None, Any, First
+
+        And a few operands
+            True,  False,
+            Null,  NotNull
+            Blank, NotBlank
+
+    #>
+    [OutputType('bool')]
+    [Alias(
+        'Pk.TestBools', # base alias for consistency but not used
+        'Pk.AnyTrue',
+        'Pk.AnyFalse',
+        'Pk.AnyNull',
+        'Pk.AnyNotNull',
+        'Pk.AnyBlank',
+        'Pk.AnyNotBlank',
+
+        'Pk.FirstTrue',
+        'Pk.FirstFalse',
+        'Pk.FirstNull',
+        'Pk.FirstNotNull',
+        'Pk.FirstBlank',
+        'Pk.FirstNotBlank',
+
+        'Pk.AllTrue',
+        'Pk.AllFalse',
+        'Pk.AllNull',
+        'Pk.AllNotNull',
+        'Pk.AllBlank',
+        'Pk.AllNotBlank',
+
+        'Pk.NoneTrue',
+        'Pk.NoneFalse',
+        'Pk.NoneNull',
+        'Pk.NoneNotNull',
+        'Pk.NoneBlank',
+        'Pk.NoneNotBlank'
+    )]
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory, ValueFromPipeline)]
+        [AllowEmptyCollection()]
+        [AllowEmptyString()]
+        [AllowNull()]
+        [object[]] $InputObject,
+
+        # output the $filter_* variables as a hashtable
+        [ValidateScript({throw 'nyi'})]
+        [switch]$PassThru,
+
+        # write errors, or throw, rather than returning bools
+        [ValidateScript({throw 'nyi'})]
+        [Alias('Strict', 'ErrorOnFail')]
+        [switch]$Assert
+
+    )
+    begin {
+        $AliasName   = $MyInvocation.InvocationName -replace '^(Picky|Pk)\.', ''
+        $CompareMode = $AliasName
+        [List[Object]] $tests = @()
+    }
+    process {
+        $tests.AddRange( @( $InputObject ))
+        $CompareMode | Join-String -op 'Alias: ' | Dotils.Write-DimText | Write-verbose
+    }
+    end {
+        $full_list = $Tests
+        $filter_TrueList     = @($Tests) -eq $true
+        $filter_FalseList    = @($Tests) -eq $False
+
+        $filter_NullList     = @($Tests) -eq $null
+        $filter_NotNullList  = @($Tests) -ne $null
+
+        $filter_BlankList    = @( $tests ).Where({ [string]::IsNullOrWhiteSpace($_) })
+        $filter_NotBlankList = @( $tests ).Where({ [string]::IsNullOrWhiteSpace($_) })
+
+        switch( $CompareMode ) {
+            'AnyTrue' {
+                $filter_TrueList.count -gt 0
+                break
+            }
+            'AllTrue' {
+                ($filter_TrueList.count -gt 0) -and ($filter_TrueList.count -eq $full_list.count)
+                break
+            }
+            default { throw "Uhandled compare mode: $CompareMode !"}
+        }
+
+    }
+}
+
 # [hashtable]$script:Cache = @{}
 # if($Script:ModuleConfig.VerboseJson_ArgCompletions) {
 #     (Join-Path (gi 'temp:\') 'CacheMeIfYouCan.ArgCompletions.log')
