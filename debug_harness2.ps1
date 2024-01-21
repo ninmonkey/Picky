@@ -31,10 +31,27 @@ h1 'early exit. refactor test.'
 
 
 function Pk.TestBools {
+    <#
+    .SYNOPSIS
+        Check if a bunch of bools are all true, or any true, or none true, or all null, or all blank, etc...
+    .DESCRIPTION
+        There are 4 main conditions
+            All, None, Any, First
+
+        And a few operands
+            True,  False,
+            Null,  NotNull
+            Blank, NotBlank
+
+    #>
+    [OutputType('bool')]
     [Alias(
         'Pk.AnyTrue',
         'Pk.AnyFalse',
         'Pk.AnyNull',
+        'Pk.AnyNotNull',
+        'Pk.AnyBlank',
+        'Pk.AnyNotBlank',
 
         'Pk.FirstTrue',
         'Pk.FirstFalse',
@@ -42,7 +59,12 @@ function Pk.TestBools {
 
         'Pk.AllTrue',
         'Pk.AllFalse',
-        'Pk.AllNull'
+        'Pk.AllNull',
+
+        'Pk.NoneTrue',
+        'Pk.NoneFalse',
+        'Pk.NoneNull'
+
     )]
     [CmdletBinding()]
     param(
@@ -50,19 +72,42 @@ function Pk.TestBools {
         [AllowEmptyCollection()]
         [AllowEmptyString()]
         [AllowNull()]
-        [object[]] $InputObject
+        [object[]] $InputObject,
+
+        # output the $filter_* variables as a hashtable
+        [ValidateScript({throw 'nyi'})]
+        [switch]$PassThru,
+
+        # write errors, or throw, rather than returning bools
+        [ValidateScript({throw 'nyi'})]
+        [Alias('Strict', 'ErrorOnFail')]
+        [switch]$Assert
+
     )
     begin {
         $AliasName   = $MyInvocation.InvocationName
         $CompareMode = $AliasName
-        [List[Object]] $Items = @()
+        [List[Object]] $tests = @()
     }
     process {
-        $Items.AddRange( @( $InputObject ))
+        $tests.AddRange( @( $InputObject ))
         $AliasName | Join-String -op 'Alias: ' | Dotils.Write-DimText | Write-verbose -verbose
     }
     end {
+        $filter_TrueList     = @($Tests) -eq $true
+        $filter_FalseList    = @($Tests) -eq $False
+
+        $filter_NullList     = @($Tests) -eq $null
+        $filter_NotNullList  = @($Tests) -ne $null
+
+        $filter_BlankList    = @( $tests ).Where({ [string]::IsNullOrWhiteSpace($_) })
+        $filter_NotBlankList = @( $tests ).Where({ [string]::IsNullOrWhiteSpace($_) })
+
         switch( $CompareMode ) {
+            'AnyTrue' {
+                $filter_TrueList.count -gt 0
+                break
+            }
             default { throw "Uhandled compare mode: $CompareMode !"}
         }
 
