@@ -51,12 +51,12 @@ function Picky.TestBools {
     [OutputType('bool')]
     [Alias(
         'Pk.TestBools', # base alias for consistency but not used
-        'Pk.AnyTrue',
-        'Pk.AnyFalse',
-        'Pk.AnyNull',
-        'Pk.AnyNotNull',
-        'Pk.AnyBlank',
-        'Pk.AnyNotBlank',
+        'Pk.AnyTrue',           'Pk.SomeTrue',
+        'Pk.AnyFalse',          'Pk.SomeFalse',
+        'Pk.AnyNull',           'Pk.SomeNull',
+        'Pk.AnyNotNull',        'Pk.SomeNotNull',
+        'Pk.AnyBlank',          'Pk.SomeBlank',
+        'Pk.AnyNotBlank',       'Pk.SomeNotBlank',
 
         'Pk.FirstTrue',
         'Pk.FirstFalse',
@@ -127,7 +127,7 @@ function Picky.TestBools {
 
     )
     begin {
-        $AliasName   = $MyInvocation.InvocationName -replace '^(Picky|Pk)\.', ''
+        $AliasName   = $MyInvocation.InvocationName -replace '^(Picky|Pk)\.', '' -replace '^Some', 'Any'
         $CompareMode = $AliasName
         [List[Object]] $tests = @()
     }
@@ -153,6 +153,10 @@ function Picky.TestBools {
             }
             'AllTrue' {
                 ($filter_TrueList.count -gt 0) -and ($filter_TrueList.count -eq $full_list.count)
+                break
+            }
+            'AllFalse' {
+                ($filter_falseList.count -gt 0) -and ($filter_falseList.count -eq $full_list.count)
                 break
             }
             default { throw "Uhandled compare mode: $CompareMode !"}

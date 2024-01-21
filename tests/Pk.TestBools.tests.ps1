@@ -89,11 +89,8 @@ Describe 'Picky.TestBools Hardcoded Cases'  {
     Context 'HardCodedInvokes: <_>' -Tag 'StaticTest', 'HardCoded' -ForEach @(
         'AsPipeline', 'AsParameter'
     ) {
-        BeforeEach {
-            $WhichMode = $_
-        }
-        It 'Picky.AllTrue' {
-            # $whichMode = $_
+        It 'Picky.AllTrue [[ <_> ]]>' {
+            $whichMode = $_
             switch( $WhichMode ) {
                 'AsParameter' {
                     Picky.AnyTrue -in $Samples.SomeTrue  | Should -be $true

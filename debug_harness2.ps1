@@ -3,10 +3,9 @@ Import-Module -force -passthru (Join-Path $PSScriptRoot './Picky/Picky.psm1')
     | Render.ModuleName
 # impo picky -PassThru -Force
     # | Render.ModuleName
-
+$PSDefaultParameterValues['Pk.TestBools:Verbose'] = $True
+$PSDefaultParameterValues.Remove('Pk.TestBools:Verbose')
 hr
-'sdf'.EndsWith
-
 
 $testy = [pscustomobject]@{
     Blank = ''
@@ -29,13 +28,40 @@ Picky.Test-Object @pkSplat
 |ft
 h1 'early exit. refactor test.'
 
+function Sample.Rebuild {
+    param()
 
+    $h       = [ordered]@{}
+    $h.Mixed = @( $false, $true, $true, $null, '', ' ')
+
+    $h.SomeTrue = @( $false, $true, $true, $null, '', ' ')
+    $h.OnlyTrue = @( $true, $true )
+    $h.NoneTrue = @( $false, '', '  ' )
+
+    $h.SomeFalse = @( $false, $true, $true, $null, '', ' ')
+    $h.OnlyFalse = @( $false, $false )
+    $h.NoneFalse = @( $true, ' ' )
+
+    $h.SomeNull = @( $false, $true, $true, $null, '', ' ')
+    $h.OnlyNull = @( $Null, $Null )
+    $h.NoneNull = @( 0, '', $false, ' ' )
+
+    $h.SomeBlank = @( $false, $true, $true, $null, '', ' ')
+    $h.OnlyBlank = @( ' ', '' )
+
+    $h.EmptyList      = @()
+    $h.ScalarNull     = $Null
+    $h.ScalarTrue     = $True
+    $h.ScalarFalse    = $false
+    $h.ScalarBlank    = ''
+    $h.ScalarEmptyStr = [string]::Empty
+    return $h
+}
+$Samples = Sample.Rebuild
 
 $targetCmd = gcm Picky.TestBools
 
 
-
-$PSDefaultParameterValues['Pk.TestBools:Verbose'] = $True
 Pk.AnyTrue -InputObject @( $false, $true ) | SHould -be $True
 @( $false, $true ) | Pk.AnyTrue | SHould -be $True
 Pk.AllTrue -InputObject @( $false, $true ) | SHould -be $false
@@ -48,6 +74,17 @@ function FindBlank { process {
     #     $_
     # }
 }}
+
+function InlineHardTestsBeforePesterStructure {
+    $Samples.OnlyTrue   | Pk.AnyTrue    | Should -be $true
+    $Samples.NoneTrue   | Pk.AnyTrue    | Should -be $false
+    $Samples.SomeFalse  | Pk.AllFalse   | Should -be $false
+    $Samples.OnlyFalse  | Pk.AllFalse   | Should -be $true
+}
+InlineHardTestsBeforePesterStructure
+hr
+'finished inline pester' | write-host -fore white -bg 'darkgreen'
+hr
 
 # function Picky.Coalesce {
 
