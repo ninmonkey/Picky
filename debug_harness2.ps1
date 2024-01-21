@@ -56,15 +56,23 @@ function Pk.TestBools {
         'Pk.FirstTrue',
         'Pk.FirstFalse',
         'Pk.FirstNull',
+        'Pk.FirstNotNull',
+        'Pk.FirstBlank',
+        'Pk.FirstNotBlank',
 
         'Pk.AllTrue',
         'Pk.AllFalse',
         'Pk.AllNull',
+        'Pk.AllNotNull',
+        'Pk.AllBlank',
+        'Pk.AllNotBlank',
 
         'Pk.NoneTrue',
         'Pk.NoneFalse',
-        'Pk.NoneNull'
-
+        'Pk.NoneNull',
+        'Pk.NoneNotNull',
+        'Pk.NoneBlank',
+        'Pk.NoneNotBlank'
     )]
     [CmdletBinding()]
     param(
@@ -85,15 +93,16 @@ function Pk.TestBools {
 
     )
     begin {
-        $AliasName   = $MyInvocation.InvocationName
+        $AliasName   = $MyInvocation.InvocationName -replace '^(Picky|Pk)\.', ''
         $CompareMode = $AliasName
         [List[Object]] $tests = @()
     }
     process {
         $tests.AddRange( @( $InputObject ))
-        $AliasName | Join-String -op 'Alias: ' | Dotils.Write-DimText | Write-verbose -verbose
+        $CompareMode | Join-String -op 'Alias: ' | Dotils.Write-DimText | Write-verbose
     }
     end {
+        $full_list = $Tests
         $filter_TrueList     = @($Tests) -eq $true
         $filter_FalseList    = @($Tests) -eq $False
 
@@ -108,15 +117,21 @@ function Pk.TestBools {
                 $filter_TrueList.count -gt 0
                 break
             }
+            'AllTrue' {
+                ($filter_TrueList.count -gt 0) -and ($filter_TrueList.count -eq $full_list.count)
+                break
+            }
             default { throw "Uhandled compare mode: $CompareMode !"}
         }
 
     }
 }
 
-
+$PSDefaultParameterValues['Pk.TestBools:Verbose'] = $True
 Pk.AnyTrue -InputObject @( $false, $true ) | SHould -be $True
+@( $false, $true ) | Pk.AnyTrue | SHould -be $True
 Pk.AllTrue -InputObject @( $false, $true ) | SHould -be $false
+@( $false, $true ) | Pk.AllTrue | SHould -be $false
 # find-blank
 function FindBlank { process {
     if( Picky.String.Test -In $_ Blank ) { $_ }
