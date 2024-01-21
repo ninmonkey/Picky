@@ -80,12 +80,12 @@ function Picky.TestBools {
         'Pk.NoneNotBlank',
 
         # 'Picky.TestBools', # base alias for consistency but not used
-        'Picky.AnyTrue',
-        'Picky.AnyFalse',
-        'Picky.AnyNull',
-        'Picky.AnyNotNull',
-        'Picky.AnyBlank',
-        'Picky.AnyNotBlank',
+        'Picky.AnyTrue',            'Picky.SomeTrue',
+        'Picky.AnyFalse',           'Picky.SomeFalse',
+        'Picky.AnyNull',            'Picky.SomeNull',
+        'Picky.AnyNotNull',         'Picky.SomeNotNull',
+        'Picky.AnyBlank',           'Picky.SomeBlank',
+        'Picky.AnyNotBlank',        'Picky.SomeNotBlank',
 
         'Picky.FirstTrue',
         'Picky.FirstFalse',
@@ -158,6 +158,15 @@ function Picky.TestBools {
             'AllFalse' {
                 ($filter_falseList.count -gt 0) -and ($filter_falseList.count -eq $full_list.count)
                 break
+            }
+            'NoneNull' {
+                $filter_NullList.count -eq 0
+            }
+            'NoneTrue' {
+                $filter_TrueList.count -eq 0
+            }
+            'NoneFalse' {
+                $filter_FalseList.count -eq 0
             }
             default { throw "Uhandled compare mode: $CompareMode !"}
         }

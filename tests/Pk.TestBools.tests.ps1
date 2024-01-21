@@ -89,7 +89,7 @@ Describe 'Picky.TestBools Hardcoded Cases'  {
     Context 'HardCodedInvokes: <_>' -Tag 'StaticTest', 'HardCoded' -ForEach @(
         'AsPipeline', 'AsParameter'
     ) {
-        It 'Picky.AllTrue [[ <_> ]]>' {
+        It 'Picky.AnyTrue <_>' {
             $whichMode = $_
             switch( $WhichMode ) {
                 'AsParameter' {
@@ -107,32 +107,55 @@ Describe 'Picky.TestBools Hardcoded Cases'  {
                 default { throw "UnhandledMode: $WhichMode"}
             }
         }
-
     }
-    Context -skip 'Mode: <_>' -ForEach @(
-        'AsPipeline', 'AsParameter'
-    ) -Tag @('skip some tests until alias invoke is resolved')  {
+
         # or pester mode will throw 'UnhandledMode: System.Collections.Hashtable'
-        it '<_> : <name> is <expected>' -ForEach @(
-            @{
-                Name = 'SomeTrue'
-                In = $Samples.SomeTrue
-                Expected = $true
-            }
-            @{ Name = 'Last'  }
+    Context '🐒 AnyTrue' {
+        it 'Mode: <_>' -ForEach @(
+            'AsPipeline', 'AsParameter'
         ) {
             $whichMode = $_
-            switch( $WhichMode ) {
+            switch( $whichMode ) {
                 'AsParameter' {
-                    Pk.SomeTrue -in $In | Should -be $Expected
+                    Picky.AnyTrue -in $Samples.SomeTrue  | Should -be $true
+                    Picky.AnyTrue -in $Samples.OnlyTrue  | Should -be $true
+                    Picky.AnyTrue -in $Samples.NoneTrue  | Should -be $false
+                    Picky.AnyTrue -in $Samples.EmptyList | Should -be $true
                 }
                 'AsPipeline' {
-                    $In | Pk.SomeTrue | Should -be $Expected
+                    $Samples.SomeTrue  | Picky.AnyTrue | Should -be $true
+                    $Samples.OnlyTrue  | Picky.AnyTrue | Should -be $true
+                    $Samples.NoneTrue  | Picky.AnyTrue | Should -be $false
+                    $Samples.EmptyList | Picky.AnyTrue | Should -be $false
                 }
-                default { throw "UnhandledMode: $WhichMode"}
             }
         }
     }
+
+    # Context -skip 'Mode: <_>' -ForEach @(
+    #     'AsPipeline', 'AsParameter'
+    # ) -Tag @('skip some tests until alias invoke is resolved')  {
+    #     # or pester mode will throw 'UnhandledMode: System.Collections.Hashtable'
+    #     it '<_> : <name> is <expected>' -ForEach @(
+    #         @{
+    #             Name = 'SomeTrue'
+    #             In = $Samples.SomeTrue
+    #             Expected = $true
+    #         }
+    #         @{ Name = 'Last'  }
+    #     ) {
+    #         $whichMode = $_
+    #         switch( $WhichMode ) {
+    #             'AsParameter' {
+    #                 Pk.SomeTrue -in $In | Should -be $Expected
+    #             }
+    #             'AsPipeline' {
+    #                 $In | Pk.SomeTrue | Should -be $Expected
+    #             }
+    #             default { throw "UnhandledMode: $WhichMode"}
+    #         }
+    #     }
+    # }
     # it '<SubStr> in <Str> using <ComparisonType>' -ForEach @(
     #     @{
     #         In = 'foo.PS1'

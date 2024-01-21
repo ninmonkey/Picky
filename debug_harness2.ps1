@@ -76,10 +76,28 @@ function FindBlank { process {
 }}
 
 function InlineHardTestsBeforePesterStructure {
-    $Samples.OnlyTrue   | Pk.AnyTrue    | Should -be $true
-    $Samples.NoneTrue   | Pk.AnyTrue    | Should -be $false
-    $Samples.SomeFalse  | Pk.AllFalse   | Should -be $false
-    $Samples.OnlyFalse  | Pk.AllFalse   | Should -be $true
+    $Samples.OnlyTrue    | Pk.AnyTrue    | Should -be $true
+    $Samples.NoneTrue    | Pk.AnyTrue    | Should -be $false
+
+    $Samples.SomeFalse   | Pk.AllFalse   | Should -be $false
+    $Samples.OnlyFalse   | Pk.AllFalse   | Should -be $true
+
+    $Samples.SomeFalse   | Pk.AllTrue    | Should -be $false
+    $Samples.OnlyFalse   | Pk.AllTrue    | Should -be $false
+    $Samples.OnlyTrue    | Pk.AllTrue    | Should -be $true
+
+    $Samples.SomeTrue    | Pk.NoneTrue   | Should -be $false
+    $Samples.OnlyFalse   | Pk.NoneTrue   | Should -be $true
+    $Samples.OnlyTrue    | Pk.NoneTrue   | Should -be $false
+    $Samples.ScalarTrue  | Pk.NoneTrue   | Should -be $false
+    $Samples.ScalarFalse | Pk.NoneTrue   | Should -be $true
+    $Samples.ScalarNull  | Pk.NoneTrue   | Should -be $true
+    $Samples.ScalarBlank | Pk.NoneTrue   | Should -be $true
+
+    $Samples.OnlyNull    | Pk.NoneNull   | Should -be $false
+    $Samples.NoneNull    | Pk.NoneNull   | Should -be $true
+    $Samples.OnlyFalse   | Pk.NoneNull   | Should -be $true
+    $Samples.OnlyTrue    | Pk.NoneNull   | Should -be $true
 }
 InlineHardTestsBeforePesterStructure
 hr
