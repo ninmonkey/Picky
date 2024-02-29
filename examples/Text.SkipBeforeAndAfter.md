@@ -13,6 +13,18 @@ Pwsh🐒>
 docker --help 
    | Picky.Text.SkipBeforeMatch -BeforePattern '^Commands' -IncludeMatch
    | Picky.Text.SkipAfterMatch -AfterPattern '^Global Options' 
+
+## or aliases
+$lines | Pk.SkipBeforeMatch -before '^Commands:' -IncludeMatch 
+       | Pk.SkipAfterMatch  -after 'Global Options' 
+
+## You can chain it. (not optimized for speed)
+
+docker --help
+  | Pk.SkipBeforeMatch -before '^Commands:' -IncludeMatch 
+  | Pk.SkipAfterMatch  -after 'Global Options' 
+  | Pk.SkipBeforeMatch 'restart' -IncludeMatch
+  | Pk.SkipAfterMatch 'stats'
 ```
 Outputs: 
 

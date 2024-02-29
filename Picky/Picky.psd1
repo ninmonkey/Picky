@@ -12,7 +12,7 @@
 RootModule = 'Picky.psm1'
 
 # Version number of this module.
-ModuleVersion = '0.0.15'
+ModuleVersion = '0.0.16'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -27,7 +27,7 @@ Author = 'Jake Bolton <jake.bolton.314@gmail.com>'
 CompanyName = 'Jake Bolton'
 
 # Copyright statement for this module
-Copyright = '2023'
+Copyright = '2023-2024'
 
 # Description of the functionality provided by this module
 Description = 'To choose is to be picky'
