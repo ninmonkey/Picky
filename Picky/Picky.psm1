@@ -1150,6 +1150,118 @@ function util.Write-Information {
     $Input | Write-Information -infa 'continue'
 }
 
+function Picky.Object.FirstN {
+    <#
+    .SYNOPSIS
+        select the first N objects, or lines of text
+    .EXAMPLE
+        Pwsh> Get-ChildItem -recurse . | Pk.FirstN 2
+    .EXAMPLE
+        Pwsh> docker help | Pk.FirstN 10
+
+    ## outputs:
+        Usage:  docker [OPTIONS] COMMAND
+
+        A self-sufficient runtime for containers
+
+        Common Commands:
+        run         Create and run a new container from an image
+        exec        Execute a command in a running container
+        ps          List containers
+        build       Build an image from a Dockerfile
+
+    .NOTES
+        - some of the Text.*, like this, aren't hardcoded to string
+        - future: Pass StringBuilder around?
+        - future: Offset so you say say -2, or +3 index relative the match
+    #>
+    [CmdletBinding()]
+    [Alias(
+        'Pk.FirstN','Picky.FirstN',
+        'Pk.Text.FirstN', 'Picky.Text.FirstN',
+        'Pk.TakeN', 'Pk.Text.TakeN', 'Picky.Text.TakeN'
+    )]
+    [CmdletBinding()]
+    param(
+
+        # filtering regex
+        [Alias('FirstN', 'N', 'Len')]
+        [Parameter(Mandatory, Position=0)]
+        [int]$TakeCount,
+
+        [Parameter(ValueFromPipeline)]
+        [object[]]$TextContent
+    )
+    begin {
+        $ShouldTake = $false
+        $linesProcessed = 0
+    }
+    process {
+        foreach($Line in $TextContent) {
+            $linesProcessed++
+            if($linesProcessed -gt $TakeCount) {
+                $shouldTake = $true
+                continue
+            }
+            if(-not $ShouldTake) { $Line }
+        }
+    }
+    end {
+        if($TakeCount -gt $LinesProcessed) {
+            'TakeCount is greater than the number of lines in the input: FirstN: {0}, Parsed: {1}' -f @(
+                $TakeCount, $LinesProcessed
+            )
+            | write-verbose
+        }
+    }
+}
+function Picky.Text.SkipBeforeMatch {
+    <#
+    .SYNOPSIS
+        ignores all text until you reach the first match, output remaining rows
+        wait until a flag, ignoring output before ti
+    .NOTES
+        - future: Pass StringBuilder around?
+        - future: Offset so you say say -2, or +3 index relative the match
+    #>
+    [Alias(
+        'Picky.Text.SkipUntilMatch',
+        'Pk.Text.SkipBeforeMatch',
+        'Pk.SkipBeforeMatch',
+        'Pk.Text.SkipUntilMatch',
+        'Pk.SkipBeforeMatch',
+        'Pk.AfterMatch'
+    )]
+    [CmdletBinding()]
+    param(
+
+        # filtering regex
+        [Parameter(Mandatory, Position=0)]
+        [Alias('Regex', 'Re', 'Pattern', 'Condition', 'Filter', 'Until')]
+        [string]$BeforePattern,
+
+        [Alias('Lines', 'InputObject')]
+        [Parameter(ValueFromPipeline)]
+        [object[]]$TextContent,
+
+        # default setting ignores the line that matched. this includes it.
+        [switch]$IncludeMatch
+    )
+    begin {
+        $ShouldSkip = $true
+    }
+    process {
+        foreach($Line in $TextContent) {
+            if($Line -match $BeforePattern) {
+                $ShouldSkip = $false
+                if($IncludeMatch){ $Line }
+                continue
+            }
+            if( -not $SHouldSkip) { $Line }
+        }
+    }
+    end {}
+}
 
 ### bottom before classes
 

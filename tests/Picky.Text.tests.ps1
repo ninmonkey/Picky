@@ -21,7 +21,19 @@ AfterAll {
 }
 
 
-Describe '[Picky].[Object.FirstN]' {
+Describe 'Picky.Text.SkipBeforeMatch' {
+    it 'Skip -IncludeMatch'  {
+        'a'..'f'
+            | Picky.Text.SkipBeforeMatch -BeforePattern 'd' -IncludeMatch
+            | Should -BeExactly ('d'..'f')
+    }
+    it 'Skip'  {
+        'a'..'f'
+            | Picky.Text.SkipBeforeMatch -BeforePattern 'd'
+            | Should -BeExactly ('e'..'f')
+    }
+}
+Describe 'Picky.Object.FirstN' {
     it 'FirstN Underflow'  {
         0..100
             | Picky.Object.FirstN 4
