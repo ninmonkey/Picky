@@ -8,10 +8,10 @@ BeforeAll {
     $Error.Count
         | Join-String -f 'ErrCountStart: {0}'
         | write-host -back 'darkyellow'
-    $PSStyle.OutputRendering = 'ansi'
+    # $PSStyle.OutputRendering = 'ansi'
 }
 AfterAll {
-    $PSStyle.OutputRendering = 'ansi'
+    # $PSStyle.OutputRendering = 'ansi'
     'ErrCountEnd: {0} [ +{1} ]' -f @(
         $Error.Count
         $Error.Count - $ErrCountStart
