@@ -19,7 +19,53 @@ $script:ModuleConfig = @{
         ShortTypeNames = $True
     }
 }
+function Picky.Text.IsEmpty {
+    <#
+    .SYNOPSIS
+        Super simple, is it an empty string or null, optionally allow whitespace
+    #>
+    [Alias(
+        'pk.Text.IsEmpty',
+        'pk.IsEmptyStr',
+        'Picky.IsEmptyStr'
 
+    )]
+    [OutputType('boolean')]
+    param(
+        [AllowEmptyString()]
+        [AllowNull()]
+        [Parameter(Mandatory, Position=0)]
+        $TextContent, [switch]$OrWhitespace
+    )
+    if($OrWhitespace) {
+        return [string]::IsNullOrWhiteSpace( $TextContent )
+    }
+    return [string]::IsNullOrEmpty( $TextContent)
+}
+
+function Picky.Text.Where-IsNotEmpty {
+    [Alias(
+        'Pk.Text.IsNotEmpty'
+        # 'Pk.?NotEmpty',
+        # 'Pk.?!Empty',
+        # 'pk.Where-IsNotEmpty',
+        # # if enable crazy aliases:
+        # '?IsNot-Blank',
+        # 'Picky.?NotBlank',
+        # 'Picky.!Blank',
+        # 'Pk.!Blank',
+        # 'Picky!Blank',
+        # 'Pk!Blank',
+        # 'Pk.?NotBlank'
+    )]
+    param(
+        [switch]$OrWhitespace
+    )
+    process {
+        if( Picky.Text.IsEmpty $_ -OrWhitespace:$OrWhitespace ) { return }
+        $_
+    }
+}
 function util.Write-DimText {
     <#
     .SYNOPSIS
@@ -1258,6 +1304,59 @@ function Picky.Text.SkipBeforeMatch {
                 continue
             }
             if( -not $SHouldSkip) { $Line }
+        }
+    }
+    end {}
+}
+
+function Picky.Text.SkipAfterMatch {
+    <#
+    .SYNOPSIS
+        collects text until a pattern is matched, ignores remaining lines
+    .NOTES
+        - future: Pass StringBuilder around?
+        - future: Offset so you say say -2, or +3 index relative the match
+    #>
+    [Alias(
+        'Picky.Text.BeforeMatch',
+        'Pk.BeforeMatch',
+        'Pk.SkipAfter',
+        'Pk.SkipAfterMatch',
+        'Pk.Text.BeforeMatch',
+
+        'Pk.Text.UntilMatch',
+        'Pk.Text.TakeUntilMatch',
+
+        'Picky.Text.TakeBeforeMatch',
+        'Picky.Text.TakeUntilMatch',
+        'Picky.Text.UntilMatch',
+        'Pk.Text.SkipAfterMatch'
+    )]
+    [CmdletBinding()]
+    param(
+
+        # filtering regex
+        [Parameter(Mandatory, Position=0)]
+        [Alias('Regex', 'Re', 'Pattern', 'Condition', 'Filter', 'After')]
+        [string]$AfterPattern,
+
+        [Parameter(ValueFromPipeline)]
+        [object[]]$TextContent,
+        # default setting ignores the line that matched. this includes it.
+        [switch]$IncludeMatch
+    )
+    begin {
+        $ShouldSkip = $false
+    }
+    process {
+        foreach($Line in $TextContent) {
+            if(Text.IsEmpty $Line) { continue }
+            if($Line -match $AfterPattern) {
+                $ShouldSkip = $true
+                if($IncludeMatch) { $Line }
+                continue
+            }
+            if( -not $ShouldSkip) { $Line }
         }
     }
     end {}

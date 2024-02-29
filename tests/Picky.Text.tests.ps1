@@ -21,6 +21,18 @@ AfterAll {
 }
 
 
+Describe 'Picky.Text.Where-IsNotEmpty' {
+    it 'Skip -OrWhiteSpace'  {
+        'a', $null, ' '
+            | Picky.Text.Where-IsNotEmpty -OrWhitespace
+            | Should -BeExactly @('a')
+    }
+    it 'Skip'  {
+        'a', $null, ' '
+            | Picky.Text.Where-IsNotEmpty
+            | Should -BeExactly @('a')
+    }
+}
 Describe 'Picky.Text.SkipBeforeMatch' {
     it 'Skip -IncludeMatch'  {
         'a'..'f'
