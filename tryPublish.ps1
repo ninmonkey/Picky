@@ -220,7 +220,12 @@ function CleanUp-InstallModule {
         gci (Join-Path (Join-Path $env:USERPROFILE "SkyDrive\Documents\PowerShell\Modules") $ModuleName) "${ModuleName}.psm1" -Recurse
             | Sort-Object LastWriteTime -Descending -top 1
 
-    $dirToRemove = gi (Join-Path (Join-Path $env:USERPROFILE "SkyDrive\Documents\PowerShell\Modules") 'picky')
+    $dirToRemove = (Join-Path (Join-Path $env:USERPROFILE "SkyDrive\Documents\PowerShell\Modules") 'picky')
+    if( -not (Test-Path $dirToRemove)) {
+        Write-warning 'Directory $DirToRemove does not currently exist'
+        return
+    }
+    $dirToRemove = Get-Item $DirToRemove
     remove-item -LiteralPath $dirToRemove -Recurse -Confirm
 }
 function BuildIt-ModuleBuilder {
@@ -276,6 +281,11 @@ function BuildIt-Publish {
     )
     if( -not $PSBoundParameters.ContainsKey('ModuleName') ) { $ModuleName = $Env:BuildModuleName }
     'ModuleName: {0}' -f $ModuleName | Write-verbose
+
+    $pathTemplate =
+        'H:\data\2023\pwsh\PsModules\{0}\{0}\..\..\..\PsModules.import\{0}' -f $ModuleName
+
+    $PathTemplate | Join-String -op 'pathTemplate: ' | write-verbose
 
     $newestBuildRoot =
         gci $PathTemplate | Sort-Object LastWriteTime -Descending -Top 1
@@ -380,14 +390,14 @@ function ImportFrom-InstallModule {
     [CmdletBinding()]
     param(
         # Module name, else falls back to:  Env:BuildModuleName
-        [string]$ModuleName
+        [string]$ModuleName = 'Picky'
     )
     if( -not $PSBoundParameters.ContainsKey('ModuleName') ) { $ModuleName = $Env:BuildModuleName }
     'ModuleName: {0}' -f $ModuleName | Write-verbose
 
     Remove-Module "${ModuleName}*"
     Uninstall-module $ModuleName -ea 'continue'
-    Install-Module -Confirm $ModuleName -Verbose -ea 'stop'
+    Install-Module -Confirm $ModuleName -Verbose -ea 'Inquire'
 
     $NewestInstalledModule =
         gci (Join-Path (Join-Path $env:USERPROFILE "SkyDrive\Documents\PowerShell\Modules") $ModuleName) "${ModuleName}.psm1" -Recurse
@@ -410,7 +420,7 @@ function ImportFrom-InstallModule {
     }
 
     Import-Module @importModuleSplat
-        | Join-string -op 'InstallModule: Import should not throw: '
+        | Join-string -op 'Import-Module: ' -sep ', ' -SingleQuote
 }
 
 @'
