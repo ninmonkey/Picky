@@ -1269,6 +1269,21 @@ function Picky.Text.SkipBeforeMatch {
     .NOTES
         - future: Pass StringBuilder around?
         - future: Offset so you say say -2, or +3 index relative the match
+    .EXAMPLE
+        Pwsh> docker --help
+            | Picky.Text.SkipBeforeMatch -BeforePattern '^Commands' -IncludeMatch
+            | Picky.Text.SkipAfterMatch  -AfterPattern  '^Global Options'
+
+        ## outputs
+
+        Commands:
+            attach      Attach local standard input, output, and error streams to a running container
+            commit      Create a new image from a container's changes
+            cp          Copy files/folders between a container and the local filesystem
+            create      Create a new container
+            diff        Inspect changes to files or directories on a container's filesystem
+            events      Get real time events from the server
+            export      Export a container's filesystem as a tar archive
     #>
     [Alias(
         'Picky.Text.SkipUntilMatch',
@@ -1350,7 +1365,7 @@ function Picky.Text.SkipAfterMatch {
     }
     process {
         foreach($Line in $TextContent) {
-            if(Text.IsEmpty $Line) { continue }
+            # if( Picky.Text.IsEmpty $line -OrWhitespace:$false ) { continue }
             if($Line -match $AfterPattern) {
                 $ShouldSkip = $true
                 if($IncludeMatch) { $Line }
