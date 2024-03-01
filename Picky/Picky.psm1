@@ -765,7 +765,72 @@ class PropertyCompareRecord {
     [bool] $Result
     [Object] $Object
 }
+function Picky.New-ObjectFromMatch {
+    <#
+    .SYNOPSIS
+        Converts text to a new PSCustomObject from a regex with named capture groups
+    .EXAMPLE
+        Pwsh> $regex = @'
+(?x)
+        # sample: https://regex101.com/r/A7tyKn/1
+        # ex: " top         Display the running processes of a container"
+        ^
+        \s+
+        (?<SubCommand>.*?)
+        \s+
+        (?<Description>.*)
+        $
+'@
+        Pwsh> docker --help | Pk.New-ObjectFromMatch $regex
 
+    # output: not perfect, but nice for such a simple pattern
+
+        SubCommand  Description
+        ----------  -----------
+        run         Create and run a new container from an image
+        exec        Execute a command in a running container
+        ps          List containers
+        build       Build an image from a Dockerfile
+        pull        Download an image from a registry
+        push        Upload an image to a registry
+        images      List images
+    #>
+    [Alias(
+        'Pk.New-ObjectFromMatch'
+    )]
+    [CmdletBinding()]
+    param(
+        # regex that has named capture groups. group names control property names
+        [Parameter(Mandatory, Position = 0)]
+        [Alias('Regex')]
+        [string]$Pattern,
+
+        # what object/string to match
+        [Parameter(Mandatory, ValueFromPipeline)]
+        [AllowEmptyString()]
+        [AllowEmptyCollection()]
+        [AllowNull()]
+        [Alias('String', 'Text', 'Content', 'InStr', 'InObj')]
+        [string[]]$InputObject,
+
+        # auto [Regex]::Escape()
+        [switch]$EscapePattern
+    )
+    begin {
+        if($EscapePattern) { $Pattern = [Regex]::Escape($Pattern) }
+    }
+    process {
+        foreach($Obj in $InputObject) {
+            if($Obj -match $Pattern) {
+                $matches.Remove(0)
+                [pscustomobject]$Matches
+            } else {
+                Write-Verbose "New-ObjectFromMatch: Zero matches using the Regex: '$Pattern' and Input: '$Obj'"
+            }
+        }
+    }
+    end {}
+}
 function Picky.Test-Object {
     <#
     .SYNOPSIS
