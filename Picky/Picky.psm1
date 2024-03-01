@@ -35,7 +35,9 @@ function Picky.Text.IsEmpty {
         [AllowEmptyString()]
         [AllowNull()]
         [Parameter(Mandatory, Position=0)]
-        $TextContent, [switch]$OrWhitespace
+        $TextContent,
+
+        [switch] $OrWhitespace
     )
     if($OrWhitespace) {
         return [string]::IsNullOrWhiteSpace( $TextContent )
@@ -59,7 +61,7 @@ function Picky.Text.Where-IsNotEmpty {
         # 'Pk.?NotBlank'
     )]
     param(
-        [switch]$OrWhitespace
+        [switch] $OrWhitespace
     )
     process {
         if( Picky.Text.IsEmpty $_ -OrWhitespace:$OrWhitespace ) { return }
@@ -84,7 +86,7 @@ function util.Write-DimText {
     # [Alias('util.Write-DimText')]
     param(
         # write host explicitly
-        [switch]$PSHost
+        [switch] $PSHost
     )
     $ColorDefault = @{
         ForegroundColor = 'gray60'
@@ -199,12 +201,12 @@ function Picky.TestBools {
 
         # output the $filter_* variables as a hashtable
         [ValidateScript({throw 'nyi'})]
-        [switch]$PassThru,
+        [switch] $PassThru,
 
         # write errors, or throw, rather than returning bools
         [ValidateScript({throw 'nyi'})]
         [Alias('Strict', 'ErrorOnFail')]
-        [switch]$Assert
+        [switch] $Assert
 
     )
     begin {
@@ -255,7 +257,7 @@ function Picky.TestBools {
     }
 }
 
-# [hashtable]$script:Cache = @{}
+# [hashtable] $script:Cache = @{}
 # if($Script:ModuleConfig.VerboseJson_ArgCompletions) {
 #     (Join-Path (gi 'temp:\') 'CacheMeIfYouCan.ArgCompletions.log')
 #     | Join-String -op 'CacheMeIfYouCan: VerboseLogging for ArgCompletions is enabled at: '
@@ -276,21 +278,21 @@ $script:Color = @{
 if($ModuleConfig.TemplateFromCacheMe) {
     function WriteFg {
         # Internal Ansi color wrapper
-        param( [object]$Color )
+        param( [object] $Color )
         if( [string]::IsNullOrEmpty( $Color ) ) { return }
         $PSStyle.Foreground.FromRgb( $Color )
     }
     function WriteBg {
         # Internal Ansi color wrapper
-        param( [object]$Color )
+        param( [object] $Color )
         if( [string]::IsNullOrEmpty( $Color ) ) { return }
         $PSStyle.Background.FromRgb( $Color )
     }
     function WriteColor {
         # Internal Ansi color wrapper
         param(
-            [object]$ColorFg,
-            [object]$ColorBg
+            [object] $ColorFg,
+            [object] $ColorBg
         )
         if( [string]::IsNullOrEmpty( $ColorFg ) -and [string]::IsNullOrEmpty( $ColorBg ) ) { return }
         @(  WriteFg $ColorFg
@@ -435,7 +437,7 @@ function Picky.Type.GetInfo {
         [Parameter( Mandatory, ParameterSetName='FromPipe',  ValueFromPipeline, ValueFromPipelineByPropertyName)]
         [Parameter( Mandatory, ParameterSetName='FromParam', Position = 0 )]
         [Alias('Name', 'Type', 'TypeInfo', 'InObj', 'Obj')]
-        [object]$InputObject,
+        [object] $InputObject,
 
         [Parameter( ParameterSetName='FromPipe',  Position = 0 )]
         [Parameter( ParameterSetName='FromParam', Position = 1 )]
@@ -445,14 +447,14 @@ function Picky.Type.GetInfo {
             'ShortName',
             'ShortNamespace'
         )]
-        [string]$OutputKind = 'ShortName',
-        [int]$MinCrumbCount = 0,
-        [switch]$PassThru
+        [string] $OutputKind = 'ShortName',
+        [int] $MinCrumbCount = 0,
+        [switch] $PassThru
     )
     # future: assert properties exist
     process {
         if($Null -eq $InputObject) { return }
-        # [ScriptBlock]$ObjAsSB = $InputObject
+        # [ScriptBlock] $ObjAsSB = $InputObject
         if($InputObject -is [type]) {
             $tinfo = $InputObject
         } elseif ($InputObject -is [string]){
@@ -477,7 +479,7 @@ function Picky.Type.GetInfo {
             # Name           = $InputObject | Dotils.Format-ShortType
             # Namespace      = $InputObject | Dotils.Format-ShortNamespace -MinCount 1
         }
-        if($PassThru) { return [pscustomobject]$Meta }
+        if($PassThru) { return [pscustomobject] $Meta }
 
         switch( $OutputKind ) {
             'Name' {
@@ -517,7 +519,7 @@ param(
         # case-insensitive. Blank strings throw errors
         # also throws when value is ambigious
         [Parameter()]
-        [String]$ResolveParameter
+        [String] $ResolveParameter
     )
 
 #>
@@ -552,7 +554,7 @@ function Picky.String.EndsWith {
         )]
         [Parameter(
             ParameterSetName = 'UsingCaseSensitive')]
-            [CultureInfo]$Culture = [CultureInfo]::InvariantCulture
+            [CultureInfo] $Culture = [CultureInfo]::InvariantCulture
     )
     process {
         <#
@@ -602,12 +604,12 @@ function Picky.String.Clamp {
     )]
     param(
         # text to split
-        [string]$InputText = '',
+        [string] $InputText = '',
 
         # which position to end at. negative values are relative
         # the end of the string
         # used by SubString(0, RelPos) after safely clamping it
-        [int]$RelativePos
+        [int] $RelativePos
     )
     if($RelativePos -lt 0) {
         $finalPos = $InputText.Length + $RelativePos
@@ -659,7 +661,7 @@ function Picky.String.Test {
             [AllowEmptyString()]
             [AllowEmptyCollection()]
             [object] $InputText, # Potentially use $InputText as an object so that I can test object before coercion
-            # [string]$InputText,
+            # [string] $InputText,
 
         [Parameter( ParameterSetName='FromPipe',  Position = 0 )]
         [Parameter( ParameterSetName='FromParam', Position = 1 )]
@@ -685,7 +687,7 @@ function Picky.String.Test {
         $InObj             = $InputObject
         $IsTrueNull        = $null -eq $InObj
         $IsText            = $InObj -is [string]
-        [string]$Text      = $InObj
+        [string] $Text      = $InObj
         $IsTrueEmptyString = $IsText -and $InObj.Length -eq 0
 
 
@@ -730,18 +732,18 @@ function Picky.String.GetInfo {
         [AllowEmptyCollection()]
         [Parameter( Mandatory, ParameterSetName='FromPipe',  ValueFromPipeline, ValueFromPipelineByPropertyName)]
         [Parameter( Mandatory, ParameterSetName='FromParam', Position = 0 )]
-        [string]$InputText,
+        [string] $InputText,
 
         [ValidateScript({throw 'nyi'})]
         [Parameter( ParameterSetName='FromPipe',  Position = 0 )]
         [Parameter( ParameterSetName='FromParam', Position = 1 )]
         [Parameter()]
         [ValidateSet('Default')]
-        [string]$OutputKind
+        [string] $OutputKind
     )
     begin {}
     process {
-        [string]$InStr = $InputText
+        [string] $InStr = $InputText
         [pscustomobject]@{
             PSTypeName  = 'picky.String.InfoRecord'
             IsBlank     = [string]::IsNullOrWhiteSpace( $InStr )
@@ -758,10 +760,10 @@ function Picky.String.GetInfo {
     }
 }
 class PropertyCompareRecord {
-    [string]$PropertyName
-    [string]$CompareKind
-    [bool]$Result
-    [Object]$Object
+    [string] $PropertyName
+    [string] $CompareKind
+    [bool] $Result
+    [Object] $Object
 }
 
 function Picky.Test-Object {
@@ -807,11 +809,11 @@ function Picky.Test-Object {
         [string[]] $BlankProp
     )
     end {
-        [List[PropertyCompareRecord]]$CmpSummary = @()
+        [List[PropertyCompareRecord]] $CmpSummary = @()
 
         foreach($Name in $PropertyName ){
 
-            [bool]$result = $InputObject.Properties.Name -contains $Name
+            [bool] $result = $InputObject.Properties.Name -contains $Name
             $cmpSummary.Add(
                 [PropertyCompareRecord]@{
                     Object       = $InputObject
@@ -822,7 +824,7 @@ function Picky.Test-Object {
         }
         foreach($Name in $MissingProperty ){
 
-            [bool]$result = $InputObject.Properties.Name -notcontains $Name
+            [bool] $result = $InputObject.Properties.Name -notcontains $Name
             $cmpSummary.Add(
                 [PropertyCompareRecord]@{
                     Object       = $InputObject
@@ -832,11 +834,11 @@ function Picky.Test-Object {
                 })
         }
         foreach($Name in $BlankProp ){
-            [bool]$exists  = $InputObject.Properties.Name -Contains $Name
+            [bool] $exists  = $InputObject.Properties.Name -Contains $Name
             $curValue      = ($InputObject.psobject.properties)?[ $Name ].Value
-            [bool]$isBlank = [string]::IsNullOrWhiteSpace( $curValue )
+            [bool] $isBlank = [string]::IsNullOrWhiteSpace( $curValue )
 
-            [bool]$Result = $exists -and $IsBlank
+            [bool] $Result = $exists -and $IsBlank
             $cmpSummary.Add(
                 [PropertyCompareRecord]@{
                     Object       = $InputObject
@@ -846,11 +848,11 @@ function Picky.Test-Object {
                 })
         }
         foreach($Name in $NotBlank ){
-            [bool]$exists     = $InputObject.Properties.Name -Contains $Name
+            [bool] $exists     = $InputObject.Properties.Name -Contains $Name
             $curValue         = ($InputObject.psobject.properties)?[ $Name ].Value
-            [bool]$isNotBlank = -not [string]::IsNullOrWhiteSpace( $curValue )
+            [bool] $isNotBlank = -not [string]::IsNullOrWhiteSpace( $curValue )
 
-            [bool]$Result = $exists -and $IsNotBlank
+            [bool] $Result = $exists -and $IsNotBlank
             $cmpSummary.Add(
                 [PropertyCompareRecord]@{
                     Object       = $InputObject
@@ -907,7 +909,7 @@ function Picky.ScriptBlock.GetInfo {
         [Parameter( Mandatory, ParameterSetName='FromPipe',  ValueFromPipeline, ValueFromPipelineByPropertyName)]
         [Parameter( Mandatory, ParameterSetName='FromParam', Position = 0 )]
         [Alias('Name', 'Func', 'Fn', 'Command', 'InObj', 'Obj', 'ScriptBlock', 'SB', 'E', 'Expression')]
-        [object]$InputObject,
+        [object] $InputObject,
 
         [Parameter( ParameterSetName='FromPipe',  Position = 0 )]
         [Parameter( ParameterSetName='FromParam', Position = 1 )]
@@ -922,12 +924,12 @@ function Picky.ScriptBlock.GetInfo {
             'PathWithLine',
             'Ast'
         )]
-        [string]$OutputKind
+        [string] $OutputKind
     )
     # future: assert properties exist
     process {
         if($Null -eq $InputObject) { return }
-        [ScriptBlock]$ObjAsSB = $InputObject
+        [ScriptBlock] $ObjAsSB = $InputObject
 
         if( $InputObject -isnot [ScriptBlock] ) {
             'Expected A <ScriptBlock | ... >. Actual: {0}' -f @(
@@ -964,15 +966,15 @@ function Picky.ScriptBlock.GetInfo {
             }
             'PathWithLine' {
                 # -is [string]
-                [PSToken]$Pos     = $InputObject.StartPosition
+                [PSToken] $Pos     = $InputObject.StartPosition
                 # refactor: this is almost a duplicate of Picky.ScriptExtent.GetInfo, but not 100%
-                [int]$StartLine   = $Pos.StartLine
-                [int]$StartCol    = $Pos.StartColumn
-                [int]$EndLine     = $Pos.EndLine # prop: NotYetUsed
-                [int]$EndCol      = $Pos.EndColumn # prop: NotYetUsed
-                [int]$Start       = $Pos.Start # prop: NotYetUsed
-                [int]$Length      = $Pos.Length # prop: NotYetUsed
-                [string]$FullName = $InputObject.File
+                [int] $StartLine   = $Pos.StartLine
+                [int] $StartCol    = $Pos.StartColumn
+                [int] $EndLine     = $Pos.EndLine # prop: NotYetUsed
+                [int] $EndCol      = $Pos.EndColumn # prop: NotYetUsed
+                [int] $Start       = $Pos.Start # prop: NotYetUsed
+                [int] $Length      = $Pos.Length # prop: NotYetUsed
+                [string] $FullName = $InputObject.File
 
                 $result = '{0}:{1}:{2}' -f @(
                     $FullName
@@ -1052,7 +1054,7 @@ function Picky.Function.GetInfo {
         [Parameter( Mandatory, ParameterSetName='FromPipe',  ValueFromPipeline, ValueFromPipelineByPropertyName)]
         [Parameter( Mandatory, ParameterSetName='FromParam', Position = 0 )]
         [Alias('Name', 'Func', 'Fn', 'Command', 'InObj', 'Obj', 'ScriptBlock', 'SB')]
-        [object]$InputObject,
+        [object] $InputObject,
 
         [Parameter( ParameterSetName='FromPipe',  Position = 0 )]
         [Parameter( ParameterSetName='FromParam', Position = 1 )]
@@ -1065,14 +1067,14 @@ function Picky.Function.GetInfo {
             'ResolveParameter',
             'ParameterSets'
         )]
-        [string]$OutputKind,
+        [string] $OutputKind,
 
         # Appears to resolve what parameters will resolve using a partial match
         # essentially: Name -like 'query*'
         # case-insensitive. Blank strings throw errors
         # also throws when value is ambigious
         [Parameter()]
-        [String]$ResolveParameter
+        [String] $ResolveParameter
     )
     process {
         if($PSBoundParameters.ContainsKey('ResolveParameter')) {
@@ -1161,7 +1163,7 @@ function Picky.String.GetCrumbs {
         # 'GetStringCrumbs'
     )]
     param(
-        [string]$InputText,
+        [string] $InputText,
 
         [ArgumentCompletions(
             '\W+',
@@ -1172,7 +1174,7 @@ function Picky.String.GetCrumbs {
             "'[ ]+'"
 
         )]
-        [string]$SplitBy
+        [string] $SplitBy
     )
     [WordCrumb]::new( $InputText, $SplitBy )
 }
@@ -1187,7 +1189,7 @@ function util.Write-Information {
         'util.Infa'
     )]
     param(
-        [switch]$WithoutInfaContinue
+        [switch] $WithoutInfaContinue
     )
     if($WithoutInfaContinue) {
         $Input | Write-Information
@@ -1233,10 +1235,10 @@ function Picky.Object.FirstN {
         # filtering regex
         [Alias('FirstN', 'N', 'Len')]
         [Parameter(Mandatory, Position=0)]
-        [int]$TakeCount,
+        [int] $TakeCount,
 
         [Parameter(ValueFromPipeline)]
-        [object[]]$TextContent
+        [object[]] $TextContent
     )
     begin {
         $ShouldTake = $false
@@ -1299,17 +1301,22 @@ function Picky.Text.SkipBeforeMatch {
         # filtering regex
         [Parameter(Mandatory, Position=0)]
         [Alias('Regex', 'Re', 'Pattern', 'Condition', 'Filter', 'Until')]
-        [string]$BeforePattern,
+        [string] $BeforePattern,
+
+        # future: Use a parameter set and BeforeLiteral instead of using this switch
+        [Alias('AsLiteral')]
+        [switch] $EscapePattern,
 
         [Alias('Lines', 'InputObject')]
         [Parameter(ValueFromPipeline)]
-        [object[]]$TextContent,
+        [object[]] $TextContent,
 
         # default setting ignores the line that matched. this includes it.
-        [switch]$IncludeMatch
+        [switch] $IncludeMatch
     )
     begin {
         $ShouldSkip = $true
+        if( $EscapePattern ){ $BeforePattern = [Regex]::Escape($BeforePattern) }
     }
     process {
         foreach($Line in $TextContent) {
@@ -1353,12 +1360,16 @@ function Picky.Text.SkipAfterMatch {
         # filtering regex
         [Parameter(Mandatory, Position=0)]
         [Alias('Regex', 'Re', 'Pattern', 'Condition', 'Filter', 'After')]
-        [string]$AfterPattern,
+        [ArgumentCompletions(
+            "'^$' <# empty line #>",
+            "'^\s+$' <# some whitespace#> "
+        )]
+        [string] $AfterPattern,
 
         [Parameter(ValueFromPipeline)]
-        [object[]]$TextContent,
+        [object[]] $TextContent,
         # default setting ignores the line that matched. this includes it.
-        [switch]$IncludeMatch
+        [switch] $IncludeMatch
     )
     begin {
         $ShouldSkip = $false
@@ -1397,12 +1408,12 @@ class WordCrumb {
     [string]
     $_SplitBy = '\W+'
 
-    WordCrumb ( [string]$Text ) {
+    WordCrumb ( [string] $Text ) {
         $This.RawString  = $Text
         $This.Crumbs     = $Text -split $this._SplitBy
         $this.CrumbCount = $This.Crumbs.Count
     }
-    WordCrumb ( [string]$Text, [string]$SplitBy ) {
+    WordCrumb ( [string] $Text, [string] $SplitBy ) {
         $This.RawString  = $Text
         $this.Crumbs     = $Text -split $SplitBy
         $this._SplitBy    = $SplitBy
@@ -1418,7 +1429,7 @@ class WordCrumb {
         $this.RawString  = $new.RawString
         $this._SplitBy   = $new.SplitBy
     }
-    static [WordCrumb] Parse( [string]$Text, [string]$SplitBy ) {
+    static [WordCrumb] Parse( [string] $Text, [string] $SplitBy ) {
         return [WordCrumb]::New( $Text, $SplitBy )
     }
 }
@@ -1426,7 +1437,7 @@ $get_RawString = {
     return $this.RawString
 }
 $set_RawString = {
-    param( [string]$NewText )
+    param( [string] $NewText )
     $this.RawString = $NewText
     $this.Update()
 }
@@ -1435,7 +1446,7 @@ $get_SplitBy = {
     return $this._SplitBy
 }
 $set_SplitBy = {
-    param( [string]$SplitBy )
+    param( [string] $SplitBy )
     $this._SplitBy = $SplitBy
     $this.Update()
 }
@@ -1479,7 +1490,7 @@ $w1.Crumbs | Should -BeExactly @('f', ' bar')
 
 #>
 
-[List[object]]$ExportMemberPatterns = @(
+[List[object]] $ExportMemberPatterns = @(
 
     if( $ModuleConfig.ExportPrefix.ShortTypeNames ) {
         'pk.Str*'
