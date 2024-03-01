@@ -1,4 +1,15 @@
 ﻿Import-Module Picky -PassThru -Force
+function H1 {
+    # Sugar for console headers
+    param( [string]$Text)
+    $joinStringSplat = @{
+        InputObject  = $Text
+        FormatString = "`n## {0} ##`n"
+        OutputSuffix = $PSStyle.Reset
+        OutputPrefix = $PSStyle.Foreground.FromRgb('#ebcb8b')
+    }
+    Join-String @joinStringSplat
+}
 $stdout = docker --help
 $command_headers = $stdout -match 'commands:'
 $Regex = [ordered]@{}
@@ -14,55 +25,6 @@ $Regex.DocSubCommand = @'
     (?<Description>.*)
     $
 '@
-function KeysOf {
-    param(
-        [Parameter(Mandatory, ValueFromPipeline)]
-        $InputObject
-    )
-    process {
-        $InObj = $InputObject
-        if( $InObj -is [IDictionary] ) {
-            [IDictionary]$curDict = $InObj
-            return $curDict.Keys #| Sort-Object
-        }
-        if( $InObj -is [IEnumerable] ) { # mainly for HashSet }
-            return $InObj.GetEnumerator()  # Sort-Object1
-        }
-        return $InObj.PSObject.Properties.Name #| Sort-Object
-    }
-}
-function New-ObjectFromMatch {
-    <#
-    .SYNOPSIS
-        Converts text to a new PSCustomObject from a regex with named capture groups
-    #>
-    [CmdletBinding()]
-    param(
-        [Parameter(Mandatory, Position = 0)]
-        [Alias('Regex')]
-        [string]$Pattern,
-
-        [Parameter(Mandatory, ValueFromPipeline)]
-        [Alias('String', 'Text', 'Content', 'InStr', 'InObj')]
-        [string[]]$InputObject,
-
-        [switch]$EscapePattern
-    )
-    begin {
-        if($EscapePattern) { $Pattern = [Regex]::Escape($Pattern) }
-    }
-    process {
-        foreach($Obj in $InputObject) {
-            if($Obj -match $Pattern) {
-                $matches.Remove(0)
-                [pscustomobject]$Matches
-            } else {
-                Write-Verbose "New-ObjectFromMatch: Zero matches using the Regex: '$Pattern' and Input: '$Obj'"
-            }
-        }
-    }
-    end {}
-}
 
 $docs = [ordered]@{}
 foreach($HeaderPattern in $command_headers) {
@@ -72,31 +34,24 @@ foreach($HeaderPattern in $command_headers) {
         | Pk.SkipBeforeMatch $headerPattern
         | Pk.SkipAfterMatch '^$' <# empty line #>
         | Pk.New-ObjectFromMatch $Regex.DocSubCommand
-        # | %{
-        #     if($_ -match $Regex.DocSubCommand) {
-        #         $Matches.remove(0)
-        #         [pscustomobject]$Matches
-        #     }
-        # }
 }
-$docs | KeysOf |  %{
+$docs | Picky.KeysOf |  %{
    $docs[ $_ ] | Add-Member -NotePropertyName 'Group' -NotePropertyValue $_ -PassThru -Force -ea 'ignore'
 }
+
+h1 'Subcommand Groupings'
 $docs.values | Ft -AutoSize SubCommand, Description -GroupBy Group
-# $docs | KeysOf |  %{
-#    "`n## $_ ## "
-#    $docs[ $_ ] | Ft SubCommand, Description -AutoSize
-# }
 
-# $Docs = [pscustomobject]$Docs
-# $Docs
-hr
-return
+h1 'docs header'
 docker --help
-    | Pk.SkipBeforeMatch 'Common Commands:' -IncludeMatch -EscapePattern
-    | Pk.FirstN 30
+    | Pk.SkipAfterMatch 'Common Commands:'
 
-return
+h1 'docs tail'
 docker --help
-    | Pk.SkipBeforeMatch 'Common Commands:' -IncludeMatch
-    | Pk.SkipAfterMatch '^$' <# empty line #>
+    | Pk.SkipBeforeMatch 'Global Options:' -IncludeMatch
+
+# h1 'or final args, that don''t quite capture flag pairs with the same regex'
+# docker --help
+#     | Pk.SkipBeforeMatch 'Global Options:' -IncludeMatch
+#     | Pk.SkipAfterMatch '^$' <# empty line #>
+#     | Pk.New-ObjectFromMatch $Regex.DocSubCommand

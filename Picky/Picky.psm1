@@ -106,14 +106,73 @@ function util.Write-DimText {
 # function Picky.
 function Picky.GetCommands {
     # quick summary of commands
-    # @{
-    #     External =
-    Get-Command -m Picky
-        # WithInternal =
-        #     Get-Command Pk*
-    # }
+    param(
+        [Alias('Types')]
+        [CommandType] $CommandType = ([CommandType]::All)
+    )
 }
 
+Function Picky.Object.KeysOf {
+    <#
+    .SYNOPSIS
+        Get Keys of any type: dict, object, hashSet, Json, Text, etc
+    .EXAMPLE
+        @{ a = 'stuff' } | Pk.KeysOf
+        [psobject]@{ a = 'stuff' } | Pk.KeysOf
+    .EXAMPLE
+        Pwsh> # Example: Treat object as Json, and get the keys
+        $text = Get-Date | select * | ConvertTo-Json
+        $text | Pk.KeysOf -AsJson | Join-String -sep ', '
+
+        # output:
+            DisplayHint, DateTime, Date, Day, DayOfWeek, DayOfYear, Hour, Kind,
+            Millisecond, Microsecond, Nanosecond, Minute, Month, Second, Ticks, TimeOfDay, Year
+
+        Pwsh> # Example: default behavior for strings is to enumerate [Rune]s
+        $text | Pk.KeysOf
+
+        # output:
+
+            Render Hex Dec Utf16 Utf8 Numeric                Cat  Ctrl Enc8 Enc16 Enc16Be Upper Lower
+            ------ --- --- ----- ---- -------                ---  ---- ---- ----- ------- ----- -----
+            {       7b 123     1    1      -1    OpenPunctuation False   7b 7b 00   00 7b     {     {
+            ␍        d  13     1    1      -1            Control  True   0d 0d 00   00 0d     …     …
+            ␊        a  10     1    1      -1            Control  True   0a 0a 00   00 0a     …     …
+    #>
+    [Alias(
+        'Picky.Keys',
+        'Pk.Keys',
+        'Pk.KeysOf',
+        'Picky.KeysOf'
+    )]
+    param(
+        # An object, [IDictionary], [HashSet], maybe json using 'jq | Keys'
+        [Parameter(Mandatory, ValueFromPipeline)]
+        $InputObject,
+
+        # treat strings as json
+        [switch]$AsJson
+    )
+    process {
+        $InObj = $InputObject
+        if( $InObj -is [IDictionary] ) {
+            [IDictionary]$curDict = $InObj
+            return $curDict.Keys #| Sort-Object
+        }
+        if( $InObj -is [String] -and $AsJson ) {
+            return $InObj | ConvertFrom-Json -Depth 10 -wa ignore | Picky.Object.KeysOf
+        }
+        if( $InObj -is [string] -and -not $AsJson) {
+            return $InObj.EnumerateRunes()
+        }
+        if( $InObj -is [IEnumerable] ) { # mainly for HashSet }
+            return $InObj.GetEnumerator()  # Sort-Object1
+        }
+
+
+        return $InObj.PSObject.Properties.Name #| Sort-Object
+    }
+}
 function Picky.TestBools {
     <#
     .SYNOPSIS
@@ -914,7 +973,7 @@ function Picky.Test-Object {
         }
         foreach($Name in $NotBlank ){
             [bool] $exists     = $InputObject.Properties.Name -Contains $Name
-            $curValue         = ($InputObject.psobject.properties)?[ $Name ].Value
+            $curValue          = ($InputObject.psobject.properties)?[ $Name ].Value
             [bool] $isNotBlank = -not [string]::IsNullOrWhiteSpace( $curValue )
 
             [bool] $Result = $exists -and $IsNotBlank
