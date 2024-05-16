@@ -824,6 +824,82 @@ class PropertyCompareRecord {
     [bool] $Result
     [Object] $Object
 }
+
+function Picky.ConvertFrom.RegexCollection {
+    <#
+    .synopsis
+        Collects and transforms results from [Regex]::matches, making interactive use easier.. converts resutls of [Regex]::Matches
+    .description
+
+    expected input input from [Regex]::Matches() which returns
+        type: [Match] > [Text.RegularExpressions.Match]
+        pstypenames: [Match], [Group], [Capture] > Text.RegularExpressions.*
+    .EXAMPLE
+        $found.q | Dotils.Convert.Regex.FromMatchGroup -PreserveNumberedGroups -ReturnKeyNamesOnly | Join-String -sep
+        ', '
+        0, FieldName, FieldValue, OuterTextFromNoQuoteRecord, ValueWithQuotesOrNot
+    #>
+    [Alias(
+        # 'Convert.Regex.MatchGroup',
+        'Pk.From-RegexCollection',
+        'Pk.From-MatchCollection',
+        'Pk.From-RegexGroup'
+    )]
+    [CmdletBinding()]
+    param(
+        # regex match collection/group collection
+        [Parameter(ValueFromPipeline)]
+        [object[]]$FoundRecords,
+
+        [switch]$IncludeFailed,
+        [switch]$PreserveNumberedGroups,
+
+        # returns every possible named capture group, that found
+        # something in at least one or more collections
+        [switch]$ReturnKeyNamesOnly
+    )
+    end {
+        write-warning "Wip Pk.ConvertFrom-RegexCollection"
+        $LineId = -1
+        $GroupsObj = $_.Groups ? $_.Groups : $_
+
+        ($_)?.GetType().FullName
+            | join-string -op '_.Type := '
+            | Write-Verbose -Verb
+        ($_.Groups)?.GetType().FullName
+            | join-string -op '_.Groups.Type := '
+            | Write-Verbose -Verb
+        $query = @(
+            $FoundRecords | %{
+                $LineId++
+                $FieldId = 0
+                $GroupsObj.
+                    Where({ $IncludeFailed ? $true : $_.Success })
+                    # Where({
+                    #     -not $IncludeFailed ?
+                    #         $false : $_.Success
+                    # })
+                    Where({
+                        $PreserveNumberedGroups ?
+                            $true :
+                            $_.Name -notmatch '^\d+$' })
+                | %{
+                    [pscustomobject]@{
+                        LineId = $LineId
+                        FieldId     = $FieldId++
+                        Name    = $_.Name
+                        Value   = $_.Value
+                    }
+                }
+            }
+        )
+        if( $ReturnKeyNamesOnly ) {
+            return $query.Name | Sort-Object -Unique
+        }
+        $query
+    }
+}
+
 function Picky.New-ObjectFromMatch {
     <#
     .SYNOPSIS

@@ -28,6 +28,13 @@
                 "request": "launch",
                 "script": "${workspaceRoot}/debug_harness3.ps1",
                 "cwd": "${workspaceRoot}"
+            },
+            {
+                "name": "Debug_Harness4.ps1🚀",
+                "type": "PowerShell",
+                "request": "launch",
+                "script": "${workspaceRoot}/debug_harness4.ps1",
+                "cwd": "${workspaceRoot}"
             }
         ]
     }
