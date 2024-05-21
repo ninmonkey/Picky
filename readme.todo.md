@@ -21,6 +21,9 @@ Picky.Test-Object $o -PropertyName 'Blank', 'Stuff' -NotBlank 'Blank', 'df' -Mis
 
 ### next queue
 
+- [ ] GroupChunks By ShortDateTime, like <file:///H:\data\2024\pwsh\stash-for-logs-for-picky-demos.📁\Github.Action\logs_23978678129%20-%204bitcss\Build4BitCss\8_GitLogger.txt▸manual%20sketch%20shared%20time%20⁞%20iter0.log>
+
+
 - [ ] `[Globalization.CharUnicodeInfo]` | fime
 - [ ] [UnicodeCategory](https://learn.microsoft.com/en-us/dotnet/api/system.globalization.unicodecategory?view=net-8.0)
 - String.IsBlank
