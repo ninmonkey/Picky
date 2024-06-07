@@ -859,44 +859,57 @@ function Picky.ConvertFrom.RegexCollection {
         [switch]$ReturnKeyNamesOnly
     )
     end {
-        write-warning "Wip Pk.ConvertFrom-RegexCollection"
         $LineId = -1
-        $GroupsObj = $_.Groups ? $_.Groups : $_
 
-        ($_)?.GetType().FullName
-            | join-string -op '_.Type := '
-            | Write-Verbose -Verb
-        ($_.Groups)?.GetType().FullName
-            | join-string -op '_.Groups.Type := '
-            | Write-Verbose -Verb
-        $query = @(
-            $FoundRecords | %{
-                $LineId++
-                $FieldId = 0
-                $GroupsObj.
-                    Where({ $IncludeFailed ? $true : $_.Success })
-                    # Where({
-                    #     -not $IncludeFailed ?
-                    #         $false : $_.Success
-                    # })
-                    Where({
-                        $PreserveNumberedGroups ?
-                            $true :
-                            $_.Name -notmatch '^\d+$' })
-                | %{
-                    [pscustomobject]@{
-                        LineId = $LineId
-                        FieldId     = $FieldId++
-                        Name    = $_.Name
-                        Value   = $_.Value
+        function __handleRecord {
+            param( [object]$CurObj )
+
+            $GroupsObj = $curObj.Groups ? $curObj.Groups : $curObj
+
+            ($curObj)?.GetType().FullName ?? "`u{2400}"
+                | join-string -op '_.Type := '
+                | Write-Verbose #-Verb
+
+            ($curObj.Groups)?.GetType().FullName ?? "`u{2400}"
+                | join-string -op '_.Groups.Type := '
+                | Write-Verbose #-Verb
+
+            $GroupsObj.GetType()
+                | join-string -op 'GroupObjs := '
+                | Write-Verbose #-Verb
+
+            $query = @(
+                $FoundRecords | %{
+                    $LineId++
+                    $FieldId = 0
+                    $GroupsObj.
+                        Where({ $IncludeFailed ? $true : $_.Success })
+                        # Where({
+                        #     -not $IncludeFailed ?
+                        #         $false : $_.Success
+                        # })
+                        Where({
+                            $PreserveNumberedGroups ?
+                                $true :
+                                $_.Name -notmatch '^\d+$' })
+                    | %{
+                        [pscustomobject]@{
+                            LineId = $LineId
+                            FieldId     = $FieldId++
+                            Name    = $_.Name
+                            Value   = $_.Value
+                        }
                     }
                 }
+            )
+            if( $ReturnKeyNamesOnly ) {
+                return $query.Name | Sort-Object -Unique
             }
-        )
-        if( $ReturnKeyNamesOnly ) {
-            return $query.Name | Sort-Object -Unique
+            $query
         }
-        $query
+        foreach($Obj in $FoundRecords) {
+            __handleRecord $Obj
+        }
     }
 }
 
